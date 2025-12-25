@@ -1,0 +1,26 @@
+# Rust
+target/
+pkg/
+Cargo.lock
+
+# Node
+node_modules/
+.svelte-kit/
+.vite/
+
+# Build outputs
+web/build/
+*.wasm
+
+# Test artifacts
+web/test-results/
+web/playwright-report/
+tests/comprehensive_golden.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
