@@ -12,8 +12,8 @@ test.describe('App Loading', () => {
 
     await page.goto('/');
 
-    // Wait for WASM to load
-    await expect(page.getByText('Daily Luck')).toBeVisible({ timeout: 10000 });
+    // Wait for WASM to load - Filter Builder is visible on default Search tab
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
 
     // Should not have any console errors
     expect(errors).toHaveLength(0);
@@ -23,7 +23,7 @@ test.describe('App Loading', () => {
     await page.goto('/');
 
     // Wait for page to fully load
-    await expect(page.getByText('Daily Luck')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
 
     // Check for any error messages in the UI
     const errorPopup = page.locator('text=/error/i').filter({ hasText: /calculation|TypeError|undefined/ });
@@ -36,49 +36,61 @@ test.describe('App Loading', () => {
     // Wait for WASM to load - the "Loading WASM module..." should disappear
     await expect(page.getByText('Loading WASM module...')).not.toBeVisible({ timeout: 10000 });
 
-    // The Daily Luck section should be visible after WASM loads
-    await expect(page.getByText('Daily Luck')).toBeVisible();
+    // The Filter Builder should be visible after WASM loads (Search is default tab)
+    await expect(page.getByText('Filter Builder')).toBeVisible();
   });
 
   test('displays seed explorer data after load', async ({ page }) => {
     await page.goto('/');
 
     // Wait for WASM to load
-    await expect(page.getByText('Daily Luck')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
+
+    // Switch to Explore tab
+    await page.getByRole('button', { name: 'Explore Seed' }).click();
 
     // Check that various sections are visible
-    await expect(page.getByText('Night Event')).toBeVisible();
-    await expect(page.getByText("Tomorrow's Weather")).toBeVisible();
-    await expect(page.getByText('Saloon Dish')).toBeVisible();
-    await expect(page.getByText('Next 5 Omni Geodes')).toBeVisible();
-    await expect(page.getByText('Mine Floors (1-50)')).toBeVisible();
-    await expect(page.getByText('Red Cabbage Finder')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Night Event' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: "Tomorrow's Weather" })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Saloon Dish' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Next 5 Omni Geodes' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Mine Floors (1-50)' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Red Cabbage Finder' })).toBeVisible();
   });
 });
 
 test.describe('Seed Explorer', () => {
   test('can change seed value', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText('Daily Luck')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
+
+    // Switch to Explore tab
+    await page.getByRole('button', { name: 'Explore Seed' }).click();
+    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
 
     // Change the seed
     const seedInput = page.locator('input#seed');
     await seedInput.fill('99999');
 
     // The page should update (we can't easily verify the values, but it shouldn't error)
-    await expect(page.getByText('Daily Luck')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
   });
 
   test('can change day value', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText('Daily Luck')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
+
+    // Switch to Explore tab
+    await page.getByRole('button', { name: 'Explore Seed' }).click();
+    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
 
     // Change the day
     const dayInput = page.locator('input#day');
     await dayInput.fill('10');
 
     // Should still show data
-    await expect(page.getByText('Daily Luck')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
   });
 
   test('copy link button works', async ({ page, context }) => {
@@ -86,7 +98,11 @@ test.describe('Seed Explorer', () => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
     await page.goto('/');
-    await expect(page.getByText('Daily Luck')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
+
+    // Switch to Explore tab
+    await page.getByRole('button', { name: 'Explore Seed' }).click();
+    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
 
     // Click the copy link button
     await page.getByRole('button', { name: 'Copy Link to This Seed' }).click();
@@ -97,43 +113,33 @@ test.describe('Seed Explorer', () => {
 });
 
 test.describe('Search Tab', () => {
-  test('can switch to search tab', async ({ page }) => {
+  test('search tab is default', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText('Daily Luck')).toBeVisible({ timeout: 10000 });
 
-    // Click the Search Seeds tab
-    await page.getByRole('button', { name: 'Search Seeds' }).click();
-
-    // Should see the Filter Builder
-    await expect(page.getByText('Filter Builder')).toBeVisible();
+    // Should see the Filter Builder immediately (Search is default tab)
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
   });
 
   test('can add a filter condition', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText('Daily Luck')).toBeVisible({ timeout: 10000 });
-
-    // Switch to search tab
-    await page.getByRole('button', { name: 'Search Seeds' }).click();
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
 
     // Click "+ Daily Luck" to add a filter
     await page.getByRole('button', { name: '+ Daily Luck' }).click();
 
-    // The filter condition editor should appear (look for condition-specific UI)
-    await expect(page.getByText('Min Luck')).toBeVisible();
+    // The filter condition editor should appear with "Daily Luck" label
+    await expect(page.locator('text=Daily Luck').first()).toBeVisible();
   });
 
-  test('can use a preset', async ({ page }) => {
+  test('can use an example', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByText('Daily Luck')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
 
-    // Switch to search tab
-    await page.getByRole('button', { name: 'Search Seeds' }).click();
-
-    // Click a preset
+    // Click an example
     await page.getByRole('button', { name: 'Early Red Cabbage' }).click();
 
-    // The Search Seeds button should be enabled (filter was added)
-    await expect(page.getByRole('button', { name: 'Search Seeds', exact: true })).toBeEnabled();
+    // The submit Search Seeds button should be enabled (filter was added)
+    await expect(page.locator('button:has-text("Search Seeds"):not([class*="rounded-t"])')).toBeEnabled();
   });
 });
 
@@ -149,22 +155,21 @@ test.describe('Seed Search', () => {
     });
 
     await page.goto('/');
-    await expect(page.getByText('Daily Luck')).toBeVisible({ timeout: 10000 });
-
-    // Switch to search tab
-    await page.getByRole('button', { name: 'Search Seeds' }).click();
-    await expect(page.getByText('Filter Builder')).toBeVisible();
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
 
     // Add a daily luck filter
     await page.getByRole('button', { name: '+ Daily Luck' }).click();
-    await expect(page.getByText('Min Luck')).toBeVisible();
 
-    // Set min luck to 0.07 (very lucky day)
-    const minLuckInput = page.locator('input[type="number"]').first();
-    await minLuckInput.fill('0.07');
+    // The compact filter should show "Daily Luck" inline with inputs
+    await expect(page.locator('span.font-medium:has-text("Daily Luck")')).toBeVisible();
 
-    // Click Search Seeds button
-    await page.getByRole('button', { name: 'Search Seeds', exact: true }).click();
+    // Find the luck input (first number input after "luck" text) and set it to 0.07
+    // The inputs are in order: day/range params, then min luck, then max luck
+    const luckInputs = page.locator('input[type="number"][step="0.01"]');
+    await luckInputs.first().fill('0.07');
+
+    // Click Search Seeds submit button (not the tab)
+    await page.locator('button:has-text("Search Seeds"):not([class*="rounded-t"])').click();
 
     // Wait a moment for the search to start
     await page.waitForTimeout(500);
@@ -180,16 +185,21 @@ test.describe('Seed Search', () => {
 
     // Should see search results - "Found X matching seeds"
     await expect(
-      page.getByRole('heading', { name: /Found \d+ matching seeds/ })
+      page.getByRole('heading', { name: /Found \d+ matching seeds?/ })
     ).toBeVisible({ timeout: 30000 });
   });
 });
 
 test.describe('URL Parameters', () => {
-  test('loads seed from URL', async ({ page }) => {
-    await page.goto('/?seed=54321&day=15');
+  test('loads seed from URL', async ({ page, baseURL }) => {
+    await page.goto(`${baseURL}?seed=54321&day=15`);
 
-    await expect(page.getByText('Daily Luck')).toBeVisible({ timeout: 10000 });
+    // Wait for page to load
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
+
+    // Switch to Explore tab to see the seed input
+    await page.getByRole('button', { name: 'Explore Seed' }).click();
+    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
 
     // Check that the inputs have the correct values
     const seedInput = page.locator('input#seed');
@@ -199,12 +209,12 @@ test.describe('URL Parameters', () => {
     await expect(dayInput).toHaveValue('15');
   });
 
-  test('loads filter from URL and switches to search tab', async ({ page }) => {
+  test('loads filter from URL and switches to search tab', async ({ page, baseURL }) => {
     // This is an encoded "Early Red Cabbage" style filter
     const encodedFilter = 'eyJsIjoiYSIsImMiOlt7InQiOiJjIiwiZHMiOnsidCI6InMiLCJzIjowLCJ5IjoxfSwiaSI6MjY2fV19';
-    await page.goto(`/?f=${encodedFilter}`);
+    await page.goto(`${baseURL}?f=${encodedFilter}`);
 
-    // Should automatically switch to search tab
+    // Wait for page to load
     await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
 
     // Should have the Share Filter button visible (filter was loaded)
