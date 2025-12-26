@@ -398,72 +398,91 @@ fn cart_has_item_1_4_fast(seed: i32, target_item: i32) -> bool {
     false
 }
 
-/// Fast cart item check for 1.6 - avoids HashMap and full sort
-/// Uses fixed-size arrays and tracks only what's needed
+/// Fast cart item check for v1.6 - O(n) via bounded selection
+///
+/// # The v1.6 Cart Algorithm
+///
+/// The game's traveling cart in v1.6 uses a shuffle-based selection:
+/// 1. Assign each object a random "shuffle key" via rng.Next()
+/// 2. Filter out invalid items (price=0, offlimits, wrong category, etc.)
+/// 3. Sort by shuffle key ascending
+/// 4. Take the first 10 items
+///
+/// # Collision Handling
+///
+/// When two items get the same shuffle key (rare but possible), the game
+/// stores them in a JS object which means "later overwrites earlier". We must
+/// preserve this behavior for correctness.
+///
+/// # Performance
+///
+/// Instead of sorting all ~300 items O(n log n), we maintain a bounded list
+/// of the 10 best candidates as we iterate O(n). Each iteration does at most
+/// 10 comparisons, so total is O(10n) ≈ 3000 ops vs sorting's ~2400 comparisons,
+/// but with much lower constant factors (no recursion, cache-friendly).
+///
 fn cart_has_item_v16_fast(game_id: i32, day: i32, target_item: i32) -> bool {
     let seed = get_random_seed_1_6(day, game_id / 2);
     let mut rng = CSRandom::new(seed);
 
-    // We need to track items with their shuffle keys to find the 10 lowest
-    // Use a fixed-size array, handling collisions by overwriting (later wins)
-    // Format: (key, id) - we don't need price for has_item check
-    const MAX_CANDIDATES: usize = 512; // More than enough for filtered items
-    let mut candidates: [(i32, i32); MAX_CANDIDATES] = [(i32::MAX, 0); MAX_CANDIDATES];
-    let mut candidate_count: usize = 0;
+    // Top 10 candidates: (shuffle_key, iteration_index, item_id)
+    // Initialized with MAX keys so any real item will be better
+    let mut top10: [(i32, u16, i32); 10] = [(i32::MAX, 0, 0); 10];
+    let mut top10_count: usize = 0;
 
-    // Step 1: Generate shuffle keys for all objects
+    let mut iteration_index: u16 = 0;
+
+    // Single pass through all objects, maintaining top 10
     for &(id, price, offlimits, category, type_excluded) in CART_OBJECTS_1_6 {
         let key = rng.next(None, None);
+        iteration_index += 1;
 
-        // Apply all filters
+        // Apply filters (matches game's getRandomItems + category checks)
         if price == 0 || offlimits || id < 2 || id > 789 {
             continue;
         }
-        // Category checks
         if category >= 0 || category == -999 || type_excluded {
             continue;
         }
 
-        // Handle collision: find if key exists, overwrite if so
-        let mut found_slot = false;
-        for i in 0..candidate_count {
-            if candidates[i].0 == key {
-                candidates[i] = (key, id); // Later overwrites earlier
-                found_slot = true;
+        // Check for collision with existing top 10 item (same key)
+        let mut collision_idx: Option<usize> = None;
+        for i in 0..top10_count {
+            if top10[i].0 == key {
+                collision_idx = Some(i);
                 break;
             }
         }
-        if !found_slot && candidate_count < MAX_CANDIDATES {
-            candidates[candidate_count] = (key, id);
-            candidate_count += 1;
+
+        if let Some(idx) = collision_idx {
+            // Collision: later item wins (higher index)
+            if iteration_index > top10[idx].1 {
+                top10[idx] = (key, iteration_index, id);
+            }
+        } else if top10_count < 10 {
+            // Room in top 10, just add
+            top10[top10_count] = (key, iteration_index, id);
+            top10_count += 1;
+        } else {
+            // Find worst (highest key) in top 10
+            let mut worst_idx = 0;
+            for i in 1..10 {
+                if top10[i].0 > top10[worst_idx].0 {
+                    worst_idx = i;
+                }
+            }
+            // Replace if this item is better
+            if key < top10[worst_idx].0 {
+                top10[worst_idx] = (key, iteration_index, id);
+            }
         }
     }
 
-    // Step 2: Find the 10 items with lowest keys using partial selection
-    // We use a simple approach: find min 10 times
-    let mut selected_count = 0;
-    let mut used: [bool; MAX_CANDIDATES] = [false; MAX_CANDIDATES];
-
-    while selected_count < 10 && selected_count < candidate_count {
-        // Find minimum unused key
-        let mut min_idx = usize::MAX;
-        let mut min_key = i32::MAX;
-        for i in 0..candidate_count {
-            if !used[i] && candidates[i].0 < min_key {
-                min_key = candidates[i].0;
-                min_idx = i;
-            }
-        }
-
-        if min_idx == usize::MAX {
-            break;
-        }
-
-        used[min_idx] = true;
-        if candidates[min_idx].1 == target_item {
+    // Check if target is in top 10
+    for i in 0..top10_count {
+        if top10[i].2 == target_item {
             return true;
         }
-        selected_count += 1;
     }
 
     false

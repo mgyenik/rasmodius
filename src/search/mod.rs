@@ -13,7 +13,10 @@ use crate::version::GameVersion;
 use js_sys::Function;
 use wasm_bindgen::prelude::*;
 
-/// Search a range of seeds with a filter, calling callbacks for progress and matches.
+/// Search a range of seeds with a filter, calling callback for each match.
+///
+/// Progress is NOT reported from WASM - the JS worker handles progress between chunks.
+/// This avoids expensive WASM↔JS boundary crossings in the hot loop.
 ///
 /// # Arguments
 /// * `filter_json` - JSON string representing the filter tree
@@ -21,7 +24,6 @@ use wasm_bindgen::prelude::*;
 /// * `end_seed` - Last seed to check (inclusive)
 /// * `max_results` - Stop after finding this many matches
 /// * `version` - Game version string ("1.6", "1.5", etc.)
-/// * `on_progress` - Called every ~100ms with (checked, found). Return false to stop.
 /// * `on_match` - Called for each matching seed with (seed). Return false to stop.
 ///
 /// # Returns
@@ -33,7 +35,6 @@ pub fn search_range(
     end_seed: i32,
     max_results: u32,
     version: &str,
-    on_progress: &Function,
     on_match: &Function,
 ) -> Result<(), JsValue> {
     // Parse filter once at the start
@@ -43,22 +44,8 @@ pub fn search_range(
     let game_version = GameVersion::from_str(version);
 
     let mut matches = 0u32;
-    let mut checked = 0u32;
-    let mut last_progress = instant::Instant::now();
-    let progress_interval = std::time::Duration::from_millis(100);
-    // Send initial progress
-    let initial_result = on_progress.call2(
-        &JsValue::NULL,
-        &JsValue::from(0u32),
-        &JsValue::from(0u32),
-    )?;
 
-    // Check if we should continue (callback can return false to stop)
-    if !initial_result.as_bool().unwrap_or(true) {
-        return Ok(());
-    }
-
-    'search: for seed in start_seed..=end_seed {
+    for seed in start_seed..=end_seed {
         // Stop if we've found enough matches
         if matches >= max_results {
             break;
@@ -70,36 +57,10 @@ pub fn search_range(
             // on_match returns false to signal cancellation (e.g., global maxResults hit)
             let result = on_match.call1(&JsValue::NULL, &JsValue::from(seed))?;
             if !result.as_bool().unwrap_or(true) {
-                break 'search;
+                break;
             }
-        }
-
-        checked += 1;
-
-        // Send progress every 100ms
-        let now = instant::Instant::now();
-        if now.duration_since(last_progress) >= progress_interval {
-            let result = on_progress.call2(
-                &JsValue::NULL,
-                &JsValue::from(checked),
-                &JsValue::from(matches),
-            )?;
-
-            // Check if we should continue
-            if !result.as_bool().unwrap_or(true) {
-                break 'search;
-            }
-
-            last_progress = now;
         }
     }
-
-    // Send final progress
-    on_progress.call2(
-        &JsValue::NULL,
-        &JsValue::from(checked),
-        &JsValue::from(matches),
-    )?;
 
     Ok(())
 }

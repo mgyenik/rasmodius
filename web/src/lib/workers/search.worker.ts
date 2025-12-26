@@ -8,8 +8,8 @@
  */
 
 // Chunk size for processing - smaller chunks = more responsive cancellation
-// but slightly more overhead. 200k seeds takes ~100-500ms depending on filter complexity.
-const CHUNK_SIZE = 200_000;
+// and more frequent progress updates.
+const CHUNK_SIZE = 10_000;
 
 // Message types
 export type WorkerRequest =
@@ -70,6 +70,14 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
       const workerSoftLimit = msg.maxResults;
 
       try {
+        // Send initial progress immediately so UI shows 0%
+        self.postMessage({
+          type: 'progress',
+          id: msg.id,
+          checked: 0,
+          found: 0,
+        } as WorkerResponse);
+
         // Process range in chunks to allow cancellation between WASM calls
         let chunkStart = msg.startSeed;
 
@@ -80,23 +88,13 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
           // Track matches in this chunk
           let chunkMatches = 0;
 
-          // Call WASM for this chunk
+          // Call WASM for this chunk - no progress callback, we report between chunks
           wasm.search_range(
             msg.filterJson,
             chunkStart,
             chunkEnd,
             remainingResults,
             msg.version,
-            // on_progress callback
-            (checked: number, found: number): boolean => {
-              self.postMessage({
-                type: 'progress',
-                id: msg.id,
-                checked: totalChecked + checked,
-                found: totalMatches + found,
-              } as WorkerResponse);
-              return true; // Always continue within chunk - we check cancelled between chunks
-            },
             // on_match callback
             (seed: number): boolean => {
               chunkMatches++;
@@ -112,6 +110,14 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
           // Update totals
           totalChecked += (chunkEnd - chunkStart + 1);
           totalMatches += chunkMatches;
+
+          // Report progress between chunks
+          self.postMessage({
+            type: 'progress',
+            id: msg.id,
+            checked: totalChecked,
+            found: totalMatches,
+          } as WorkerResponse);
 
           // Move to next chunk
           chunkStart = chunkEnd + 1;

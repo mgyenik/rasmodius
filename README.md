@@ -127,11 +127,11 @@ Profiling showed this consumed **~80% of search time**: HashMap insertion (54%),
 │        → Fixed [i32; 10] array instead of HashSet           │
 │        → Linear scan for duplicates (fast for 10 items)     │
 ├─────────────────────────────────────────────────────────────┤
-│  v1.6: Shuffle-based selection                              │
-│        → Fixed [(key, id); 512] array instead of HashMap    │
-│        → Linear collision scan instead of hash buckets      │
-│        → Partial selection (find 10 min) instead of sort    │
-│        → Early exit when target found                       │
+│  v1.6: Shuffle-based selection with bounded top-10 tracking │
+│        → Single O(n) pass through 807 objects               │
+│        → Maintain fixed [(key, index, id); 10] best array   │
+│        → Collision handling: later item wins (by index)     │
+│        → No sorting, no HashMap, no heap allocations        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
