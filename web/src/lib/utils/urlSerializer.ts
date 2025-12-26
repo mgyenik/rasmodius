@@ -27,7 +27,6 @@ const DAY_SPEC_TYPE_MAP: Record<string, string> = {
   'exact': 'e',
   'range': 'r',
   'season': 's',
-  'cart_days': 'c',
   'any': 'a',
 };
 
@@ -47,8 +46,6 @@ function compressDaySpec(spec: DaySpec): unknown {
       return { t, s: spec.start, e: spec.end };
     case 'season':
       return { t, s: spec.season, y: spec.year };
-    case 'cart_days':
-      return spec.season !== undefined ? { t, s: spec.season } : { t };
     case 'any':
       return { t };
   }
@@ -66,10 +63,6 @@ function decompressDaySpec(obj: Record<string, unknown>): DaySpec {
       return { type: 'range', start: obj.s as number, end: obj.e as number };
     case 'season':
       return { type: 'season', season: obj.s as 0 | 1 | 2 | 3, year: obj.y as number };
-    case 'cart_days':
-      return obj.s !== undefined
-        ? { type: 'cart_days', season: obj.s as 0 | 1 | 2 | 3 }
-        : { type: 'cart_days' };
     case 'any':
       return { type: 'any' };
     default:

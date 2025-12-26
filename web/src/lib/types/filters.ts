@@ -10,7 +10,6 @@ export type DaySpec =
   | { type: 'exact'; day: number }
   | { type: 'range'; start: number; end: number }
   | { type: 'season'; season: 0 | 1 | 2 | 3; year?: number } // 0=Spring, 1=Summer, 2=Fall, 3=Winter
-  | { type: 'cart_days'; season?: 0 | 1 | 2 | 3 } // Any Friday/Sunday
   | { type: 'any' }; // Any day
 
 export function getDaysFromSpec(spec: DaySpec, maxDay: number = 224): number[] {
@@ -22,23 +21,6 @@ export function getDaysFromSpec(spec: DaySpec, maxDay: number = 224): number[] {
     case 'season': {
       const seasonStart = spec.season * 28 + 1 + ((spec.year ?? 1) - 1) * 112;
       return Array.from({ length: 28 }, (_, i) => seasonStart + i).filter(d => d <= maxDay);
-    }
-    case 'cart_days': {
-      const days: number[] = [];
-      for (let day = 5; day <= maxDay; day += 7) {
-        // Friday
-        if (spec.season === undefined || Math.floor((day - 1) / 28) % 4 === spec.season) {
-          days.push(day);
-        }
-        // Sunday
-        const sunday = day + 2;
-        if (sunday <= maxDay) {
-          if (spec.season === undefined || Math.floor((sunday - 1) / 28) % 4 === spec.season) {
-            days.push(sunday);
-          }
-        }
-      }
-      return days;
     }
     case 'any':
       return Array.from({ length: maxDay }, (_, i) => i + 1);
@@ -119,10 +101,10 @@ export type FilterGroup = {
 export type FilterRoot = FilterGroup;
 
 // ============================================================================
-// Filter Presets
+// Filter Examples
 // ============================================================================
 
-export const FILTER_PRESETS: { name: string; description: string; filter: FilterRoot }[] = [
+export const FILTER_EXAMPLES: { name: string; description: string; filter: FilterRoot }[] = [
   {
     name: 'Early Red Cabbage',
     description: 'Find seeds with Red Cabbage in cart during Spring Year 1',
@@ -262,10 +244,6 @@ export function getDaySpecLabel(spec: DaySpec): string {
       const year = spec.year ? ` Y${spec.year}` : '';
       return `${seasons[spec.season]}${year}`;
     }
-    case 'cart_days':
-      return spec.season !== undefined
-        ? `Cart days in ${['Spring', 'Summer', 'Fall', 'Winter'][spec.season]}`
-        : 'Any cart day';
     case 'any':
       return 'Any day';
   }

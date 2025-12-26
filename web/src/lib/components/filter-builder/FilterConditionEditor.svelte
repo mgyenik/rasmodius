@@ -65,9 +65,6 @@
 				case 'season':
 					condition.daySpec = { type: 'season', season: 0, year: 1 };
 					break;
-				case 'cart_days':
-					condition.daySpec = { type: 'cart_days' };
-					break;
 				case 'any':
 					condition.daySpec = { type: 'any' };
 					break;
@@ -336,7 +333,6 @@
 					value={condition.daySpec.type}
 					onchange={(e) => updateDaySpecType(e.currentTarget.value as DaySpec['type'])}
 				>
-					<option value="cart_days">Any Cart Day</option>
 					<option value="season">Season</option>
 					<option value="range">Day Range</option>
 				</select>

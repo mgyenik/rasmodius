@@ -22,7 +22,7 @@
 	let daysPlayed = $state(5);
 	let gameVersion = $state<'1.3' | '1.4' | '1.5' | '1.6'>('1.6');
 	let error = $state<string | null>(null);
-	let activeTab = $state<'explore' | 'search'>('explore');
+	let activeTab = $state<'explore' | 'search'>('search');
 	let copySuccess = $state(false);
 
 	// Filter state
@@ -223,9 +223,12 @@
 		updateURLWithVersion(gameVersion);
 	}
 
-	function onFilterChange() {
+	// Auto-update URL when filter changes (enables back button undo)
+	$effect(() => {
+		// Access filter to trigger on any change
+		JSON.stringify(filter);
 		updateURLWithFilter(filter);
-	}
+	});
 
 	async function copyFilterLink() {
 		const url = getShareableURL(filter);
@@ -287,14 +290,6 @@
 			<!-- Tab Navigation -->
 			<div class="flex gap-2 mb-6">
 				<button
-					onclick={() => activeTab = 'explore'}
-					class="px-4 py-2 rounded-t-lg font-medium transition-colors {activeTab === 'explore'
-						? 'bg-white text-amber-800 shadow-md'
-						: 'bg-amber-100 text-amber-600 hover:bg-amber-200'}"
-				>
-					Explore Seed
-				</button>
-				<button
 					onclick={() => activeTab = 'search'}
 					class="px-4 py-2 rounded-t-lg font-medium transition-colors {activeTab === 'search'
 						? 'bg-white text-amber-800 shadow-md'
@@ -304,6 +299,14 @@
 					{#if workerCount > 0}
 						<span class="text-xs text-amber-500 ml-1">({workerCount} workers)</span>
 					{/if}
+				</button>
+				<button
+					onclick={() => activeTab = 'explore'}
+					class="px-4 py-2 rounded-t-lg font-medium transition-colors {activeTab === 'explore'
+						? 'bg-white text-amber-800 shadow-md'
+						: 'bg-amber-100 text-amber-600 hover:bg-amber-200'}"
+				>
+					Explore Seed
 				</button>
 			</div>
 

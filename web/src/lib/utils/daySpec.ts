@@ -17,22 +17,6 @@ export function getDaysFromSpec(spec: DaySpec, maxDay: number = 224): number[] {
 			return Array.from({ length: 28 }, (_, i) => seasonStart + i).filter((d) => d <= maxDay);
 		}
 
-		case 'cart_days': {
-			const days: number[] = [];
-			for (let day = 5; day <= maxDay; day += 7) {
-				if (spec.season === undefined || Math.floor((day - 1) / 28) % 4 === spec.season) {
-					days.push(day);
-				}
-				const sunday = day + 2;
-				if (sunday <= maxDay) {
-					if (spec.season === undefined || Math.floor((sunday - 1) / 28) % 4 === spec.season) {
-						days.push(sunday);
-					}
-				}
-			}
-			return days;
-		}
-
 		case 'any':
 			return Array.from({ length: maxDay }, (_, i) => i + 1);
 	}

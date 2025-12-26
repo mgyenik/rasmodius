@@ -250,7 +250,7 @@ describe('URL Serializer', () => {
           },
           {
             type: 'cart_item',
-            daySpec: { type: 'cart_days' },
+            daySpec: { type: 'season', season: 0, year: 1 },
             itemId: 266,
           },
         ],
@@ -260,28 +260,6 @@ describe('URL Serializer', () => {
 
       expect(decoded).not.toBeNull();
       expect(decoded!.conditions).toHaveLength(2);
-    });
-
-    it('correctly roundtrips cart_days daySpec', () => {
-      const filter: FilterRoot = {
-        id: 'test',
-        logic: 'and',
-        conditions: [
-          {
-            type: 'cart_item',
-            daySpec: { type: 'cart_days' },
-            itemId: 266,
-          },
-        ],
-      };
-      const encoded = encodeFilter(filter);
-      const decoded = decodeFilter(encoded);
-
-      expect(decoded).not.toBeNull();
-      const condition = decoded!.conditions[0];
-      if ('type' in condition && condition.type === 'cart_item') {
-        expect(condition.daySpec.type).toBe('cart_days');
-      }
     });
 
     it('correctly roundtrips any daySpec', () => {

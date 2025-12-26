@@ -39,25 +39,6 @@ describe('getDaysFromSpec', () => {
 		expect(days[0]).toBe(113); // Day 113 is Spring 1 Y2
 	});
 
-	it('should handle cart_days for all seasons', () => {
-		const days = getDaysFromSpec({ type: 'cart_days' }, 56);
-		// In first 56 days (Spring + Summer):
-		// Spring: Fri=5, Sun=7, Fri=12, Sun=14, Fri=19, Sun=21, Fri=26, Sun=28
-		// Summer: Fri=33, Sun=35, Fri=40, Sun=42, Fri=47, Sun=49, Fri=54, Sun=56
-		expect(days).toContain(5);
-		expect(days).toContain(7);
-		expect(days).toContain(12);
-		expect(days).toContain(14);
-		expect(days.every(isCartDay)).toBe(true);
-	});
-
-	it('should handle cart_days for specific season', () => {
-		const days = getDaysFromSpec({ type: 'cart_days', season: 0 }, 112);
-		// Only Spring cart days
-		expect(days.every((d) => getSeason(d) === 0)).toBe(true);
-		expect(days.every(isCartDay)).toBe(true);
-	});
-
 	it('should handle any', () => {
 		const days = getDaysFromSpec({ type: 'any' }, 28);
 		expect(days.length).toBe(28);

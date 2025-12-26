@@ -2,6 +2,8 @@
 
 A high-performance Stardew Valley seed finder. Predict daily luck, night events, traveling cart stock, geode contents, mine conditions, and more.
 
+**[Try it live](https://mgyenik.github.io/rasmodius/)**
+
 ## Credits
 
 - [stardew-predictor](https://github.com/exnil/stardew-predictor) - Reference implementation

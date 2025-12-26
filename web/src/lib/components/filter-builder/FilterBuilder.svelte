@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { FilterRoot, FilterCondition } from '$lib/types/filters';
-	import { createEmptyFilter, generateId, FILTER_PRESETS } from '$lib/types/filters';
+	import { createEmptyFilter, generateId, FILTER_EXAMPLES } from '$lib/types/filters';
 	import FilterGroup from './FilterGroup.svelte';
 
 	let { filter = $bindable(createEmptyFilter()), onSearch }: {
@@ -30,7 +30,7 @@
 			case 'cart_item':
 				return {
 					type: 'cart_item',
-					daySpec: { type: 'cart_days' },
+					daySpec: { type: 'season', season: 0, year: 1 },
 					itemId: 266, // Red Cabbage
 				};
 			case 'geode':
@@ -63,10 +63,10 @@
 		}
 	}
 
-	function loadPreset(index: number) {
-		const preset = FILTER_PRESETS[index];
-		if (preset) {
-			filter = { ...preset.filter, id: generateId() };
+	function loadExample(index: number) {
+		const example = FILTER_EXAMPLES[index];
+		if (example) {
+			filter = { ...example.filter, id: generateId() };
 		}
 	}
 
@@ -80,16 +80,16 @@
 </script>
 
 <div class="space-y-4">
-	<!-- Presets -->
+	<!-- Examples -->
 	<div class="flex flex-wrap gap-2">
-		<span class="text-sm text-gray-500 py-1">Presets:</span>
-		{#each FILTER_PRESETS as preset, i}
+		<span class="text-sm text-gray-500 py-1">Examples:</span>
+		{#each FILTER_EXAMPLES as example, i}
 			<button
-				onclick={() => loadPreset(i)}
+				onclick={() => loadExample(i)}
 				class="px-3 py-1 text-sm bg-amber-100 text-amber-800 rounded hover:bg-amber-200 transition-colors"
-				title={preset.description}
+				title={example.description}
 			>
-				{preset.name}
+				{example.name}
 			</button>
 		{/each}
 	</div>

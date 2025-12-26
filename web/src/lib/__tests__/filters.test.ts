@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
 	createEmptyFilter,
 	generateId,
-	FILTER_PRESETS,
+	FILTER_EXAMPLES,
 	type FilterGroup,
 	type DaySpec,
 } from '../types/filters';
@@ -39,24 +39,24 @@ describe('Filter Utilities', () => {
 		});
 	});
 
-	describe('FILTER_PRESETS', () => {
-		it('should have presets defined', () => {
-			expect(FILTER_PRESETS.length).toBeGreaterThan(0);
+	describe('FILTER_EXAMPLES', () => {
+		it('should have examples defined', () => {
+			expect(FILTER_EXAMPLES.length).toBeGreaterThan(0);
 		});
 
-		it('should have valid preset structure', () => {
-			for (const preset of FILTER_PRESETS) {
-				expect(preset.name).toBeDefined();
-				expect(preset.description).toBeDefined();
-				expect(preset.filter).toBeDefined();
-				expect(preset.filter.logic).toMatch(/^(and|or)$/);
-				expect(Array.isArray(preset.filter.conditions)).toBe(true);
+		it('should have valid example structure', () => {
+			for (const example of FILTER_EXAMPLES) {
+				expect(example.name).toBeDefined();
+				expect(example.description).toBeDefined();
+				expect(example.filter).toBeDefined();
+				expect(example.filter.logic).toMatch(/^(and|or)$/);
+				expect(Array.isArray(example.filter.conditions)).toBe(true);
 			}
 		});
 
-		it('should have Red Cabbage Y1 preset', () => {
-			const preset = FILTER_PRESETS.find((p) => p.name.includes('Red Cabbage'));
-			expect(preset).toBeDefined();
+		it('should have Red Cabbage Y1 example', () => {
+			const example = FILTER_EXAMPLES.find((p) => p.name.includes('Red Cabbage'));
+			expect(example).toBeDefined();
 		});
 	});
 });
@@ -79,11 +79,6 @@ describe('DaySpec Types', () => {
 		const spec: DaySpec = { type: 'season', season: 0, year: 1 };
 		expect(spec.type).toBe('season');
 		expect(spec.season).toBe(0); // Spring
-	});
-
-	it('should allow cart_days spec', () => {
-		const spec: DaySpec = { type: 'cart_days', season: 0 };
-		expect(spec.type).toBe('cart_days');
 	});
 
 	it('should allow any day spec', () => {
