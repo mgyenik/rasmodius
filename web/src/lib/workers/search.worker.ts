@@ -53,6 +53,11 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
       currentSearchId = msg.id;
       cancelled = false;
 
+      // Track matches sent by this worker - used to enforce soft limit per worker
+      // This is needed because the worker can't receive cancel messages while WASM is running
+      let matchesSent = 0;
+      const workerSoftLimit = msg.maxResults; // Each worker stops at its own limit
+
       try {
         // Call WASM search_range with callbacks
         wasm.search_range(
@@ -71,13 +76,17 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
             } as WorkerResponse);
             return !cancelled;
           },
-          // on_match callback
-          (seed: number) => {
+          // on_match callback - returns false to stop searching
+          (seed: number): boolean => {
+            matchesSent++;
             self.postMessage({
               type: 'match',
               id: msg.id,
               seed,
             } as WorkerResponse);
+            // Stop if this worker has sent enough matches
+            // Global coordination happens in WorkerPool which will trim to exact maxResults
+            return matchesSent < workerSoftLimit;
           }
         );
 

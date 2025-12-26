@@ -204,6 +204,9 @@ export class WorkerPool {
 
     // Divide work among workers
     const seedsPerWorker = Math.ceil(this.totalSeeds / this.workers.length);
+    // Each worker gets a proportional share of maxResults
+    // This prevents massive overshoot since workers can't receive cancel messages while in WASM
+    const maxResultsPerWorker = Math.ceil(maxResults / this.workers.length);
 
     this.workers.forEach((worker, index) => {
       this.setupWorkerHandlers(worker);
@@ -220,7 +223,7 @@ export class WorkerPool {
           filterJson,
           startSeed: workerStart,
           endSeed: workerEnd,
-          maxResults, // Each worker gets full limit; we cancel globally when reached
+          maxResults: maxResultsPerWorker,
           version
         } as WorkerRequest);
       } else {

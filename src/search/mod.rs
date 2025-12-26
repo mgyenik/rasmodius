@@ -22,7 +22,7 @@ use wasm_bindgen::prelude::*;
 /// * `max_results` - Stop after finding this many matches
 /// * `version` - Game version string ("1.6", "1.5", etc.)
 /// * `on_progress` - Called every ~100ms with (checked, found). Return false to stop.
-/// * `on_match` - Called for each matching seed with (seed)
+/// * `on_match` - Called for each matching seed with (seed). Return false to stop.
 ///
 /// # Returns
 /// Ok(()) on success, Err with message on parse error
@@ -46,7 +46,6 @@ pub fn search_range(
     let mut checked = 0u32;
     let mut last_progress = instant::Instant::now();
     let progress_interval = std::time::Duration::from_millis(100);
-
     // Send initial progress
     let initial_result = on_progress.call2(
         &JsValue::NULL,
@@ -59,7 +58,7 @@ pub fn search_range(
         return Ok(());
     }
 
-    for seed in start_seed..=end_seed {
+    'search: for seed in start_seed..=end_seed {
         // Stop if we've found enough matches
         if matches >= max_results {
             break;
@@ -68,7 +67,11 @@ pub fn search_range(
         // Evaluate filter
         if evaluate_filter(seed, &filter, game_version) {
             matches += 1;
-            on_match.call1(&JsValue::NULL, &JsValue::from(seed))?;
+            // on_match returns false to signal cancellation (e.g., global maxResults hit)
+            let result = on_match.call1(&JsValue::NULL, &JsValue::from(seed))?;
+            if !result.as_bool().unwrap_or(true) {
+                break 'search;
+            }
         }
 
         checked += 1;
@@ -84,7 +87,7 @@ pub fn search_range(
 
             // Check if we should continue
             if !result.as_bool().unwrap_or(true) {
-                break;
+                break 'search;
             }
 
             last_progress = now;
