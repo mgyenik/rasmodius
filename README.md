@@ -6,8 +6,14 @@ A high-performance Stardew Valley seed finder. Predict daily luck, night events,
 
 ## Credits
 
-- [stardew-predictor](https://github.com/exnil/stardew-predictor) - Reference implementation
-- [StardewSeedScripts](https://github.com/SeedFinding/StardewSeedScripts) - Python RNG research
+HUGE shout out to the community doing all the hard work of figuring out the RNG
+implementation, this project would not exist without these references:
+- [stardew-predictor](https://github.com/MouseyPounds/stardew-predictor/) - Reference implementation
+- [StardewSeedScripts](https://github.com/Bla-De/StardewSeedScripts) - Python RNG research
+
+## LLM Usage Disclaimer
+
+Claude code was used extensively developing this codebase as a fun holiday project.
 
 ## Architecture
 
