@@ -67,36 +67,40 @@ export function flattenConditions(
 // ============================================================================
 
 /**
- * Merge overlapping or adjacent day ranges
- * Only merges ranges that actually overlap or are adjacent (within 1 day)
- * Non-overlapping ranges are kept separate, returning the union bounds
+ * Merge overlapping or adjacent day ranges into groups
+ * Returns an array of merged ranges - one for each non-overlapping group
  */
-function mergeRanges(ranges: DayRange[]): DayRange {
+function mergeRanges(ranges: DayRange[]): DayRange[] {
   if (ranges.length === 0) {
-    return { start: 1, end: 28 };
+    return [{ start: 1, end: 28 }];
   }
 
   if (ranges.length === 1) {
-    return ranges[0];
+    return [ranges[0]];
   }
 
   const sorted = [...ranges].sort((a, b) => a.start - b.start);
-  let merged = sorted[0];
+  const result: DayRange[] = [];
+  let current = sorted[0];
 
   for (let i = 1; i < sorted.length; i++) {
-    const current = sorted[i];
-    // Only extend if overlapping or adjacent (within 1 day)
-    if (current.start <= merged.end + 1) {
-      merged = {
-        start: merged.start,
-        end: Math.max(merged.end, current.end),
+    const next = sorted[i];
+    // Merge if overlapping or adjacent (within 1 day)
+    if (next.start <= current.end + 1) {
+      current = {
+        start: current.start,
+        end: Math.max(current.end, next.end),
       };
+    } else {
+      // Gap found - save current group and start a new one
+      result.push(current);
+      current = next;
     }
-    // If there's a gap, don't extend - keep the existing merged range
-    // This means we prioritize the first/earliest range when there are gaps
   }
+  // Don't forget the last group
+  result.push(current);
 
-  return merged;
+  return result;
 }
 
 // ============================================================================
@@ -166,24 +170,35 @@ export function filterToPanels(filter: FilterRoot): ExplorePanel[] {
   const panels: ExplorePanel[] = [];
 
   // Create panels for day-based conditions
+  // Each non-overlapping range group gets its own panel
   if (cartRanges.length > 0) {
-    panels.push(createCartPanel(mergeRanges(cartRanges)));
+    for (const range of mergeRanges(cartRanges)) {
+      panels.push(createCartPanel(range));
+    }
   }
 
   if (nightEventRanges.length > 0) {
-    panels.push(createNightEventsPanel(mergeRanges(nightEventRanges)));
+    for (const range of mergeRanges(nightEventRanges)) {
+      panels.push(createNightEventsPanel(range));
+    }
   }
 
   if (luckRanges.length > 0) {
-    panels.push(createDailyLuckPanel(mergeRanges(luckRanges)));
+    for (const range of mergeRanges(luckRanges)) {
+      panels.push(createDailyLuckPanel(range));
+    }
   }
 
   if (weatherRanges.length > 0) {
-    panels.push(createWeatherPanel(mergeRanges(weatherRanges)));
+    for (const range of mergeRanges(weatherRanges)) {
+      panels.push(createWeatherPanel(range));
+    }
   }
 
   if (dishRanges.length > 0) {
-    panels.push(createDishPanel(mergeRanges(dishRanges)));
+    for (const range of mergeRanges(dishRanges)) {
+      panels.push(createDishPanel(range));
+    }
   }
 
   // Create geode panels - group by type
