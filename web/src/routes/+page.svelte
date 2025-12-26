@@ -49,7 +49,6 @@
 	let monsterFloors = $state<number[]>([]);
 	let darkFloors = $state<number[]>([]);
 	let mushroomFloors = $state<number[]>([]);
-	let redCabbageResult = $state<{ day: number; price: number } | null>(null);
 
 	let wasm: typeof import('rasmodius') | null = $state(null);
 
@@ -122,13 +121,6 @@
 			darkFloors = Array.from(wasm.find_dark_floors(seed, daysPlayed, 1, 50));
 			mushroomFloors = Array.from(wasm.find_mushroom_floors(seed, daysPlayed, 81, 120, gameVersion));
 
-			// Red cabbage finder
-			const rcResult = wasm.find_item_in_cart(seed, 266, 224, gameVersion);
-			if (rcResult.length > 0) {
-				redCabbageResult = { day: rcResult[0], price: rcResult[1] };
-			} else {
-				redCabbageResult = null;
-			}
 		} catch (e) {
 			error = `Calculation error: ${e}`;
 		}
@@ -270,9 +262,13 @@
 
 <main class="min-h-screen bg-amber-50 p-4 md:p-8">
 	<div class="max-w-6xl mx-auto">
-		<header class="text-center mb-8">
+		<header class="text-center mb-6">
 			<h1 class="text-4xl font-bold text-amber-900 mb-2">Rasmodius</h1>
-			<p class="text-amber-700">Stardew Valley Seed Finder</p>
+			<p class="text-amber-700 mb-4">Stardew Valley Seed Finder</p>
+			<p class="text-sm text-amber-600 max-w-2xl mx-auto">
+				<strong>Search</strong> millions of seeds to find one with specific cart items, lucky days, or rare events.
+				<strong>Explore</strong> a seed to see daily predictions.
+			</p>
 		</header>
 
 		{#if error}
@@ -496,18 +492,6 @@
 							{/if}
 						</div>
 					</div>
-				</div>
-
-				<div class="bg-white rounded-lg shadow-md p-6 mt-6">
-					<h2 class="text-xl font-semibold text-amber-800 mb-4">Red Cabbage Finder</h2>
-					{#if redCabbageResult}
-						<p class="text-green-600">
-							<span class="font-medium">Red Cabbage</span> on Day {redCabbageResult.day}
-							({getDayInfo(redCabbageResult.day)}) for {redCabbageResult.price.toLocaleString()}g
-						</p>
-					{:else}
-						<p class="text-gray-500">Not found in first 2 years</p>
-					{/if}
 				</div>
 
 			{:else}

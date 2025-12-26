@@ -56,7 +56,6 @@ test.describe('App Loading', () => {
     await expect(page.getByRole('heading', { name: 'Saloon Dish' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Next 5 Omni Geodes' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Mine Floors (1-50)' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Red Cabbage Finder' })).toBeVisible();
   });
 });
 
