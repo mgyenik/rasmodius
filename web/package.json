@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"dev:full": "concurrently -k \"cd .. && cargo watch -i pkg -s 'wasm-pack build --target web --out-dir pkg'\" \"vite dev\"",
+		"dev:profile": "cd .. && wasm-pack build --dev --target web --out-dir pkg && cd web && vite dev",
 		"build": "cd .. && wasm-pack build --target web --out-dir pkg && cd web && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",

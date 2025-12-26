@@ -5,6 +5,7 @@
 
 import type { FilterGroup } from '$lib/types/filters';
 import type { WorkerRequest, WorkerResponse } from './search.worker';
+import { filterToSearchJson } from '$lib/utils/filterToJson';
 
 export interface SearchProgress {
   totalChecked: number;
@@ -32,7 +33,9 @@ export class WorkerPool {
 
   // Search state
   private totalSeeds: number = 0;
+  private maxResults: number = 0;
   private checkedByWorker: Map<Worker, number> = new Map();
+  private foundByWorker: Map<Worker, number> = new Map();
   private allMatches: number[] = [];
   private completedWorkers: number = 0;
 
@@ -92,15 +95,20 @@ export class WorkerPool {
         case 'match':
           this.allMatches.push(msg.seed);
           this.callbacks.onMatch?.(msg.seed);
+
+          // Cancel all workers when we hit global maxResults
+          if (this.allMatches.length >= this.maxResults) {
+            this.cancelAllWorkers();
+          }
           break;
 
         case 'progress':
           this.checkedByWorker.set(worker, msg.checked);
+          this.foundByWorker.set(worker, msg.found);
           this.reportProgress();
           break;
 
         case 'complete':
-          this.checkedByWorker.set(worker, msg.checked);
           this.completedWorkers++;
 
           if (this.completedWorkers === this.workers.length) {
@@ -136,8 +144,11 @@ export class WorkerPool {
     const totalChecked = Array.from(this.checkedByWorker.values()).reduce((a, b) => a + b, 0);
     const elapsed = (Date.now() - this.startTime) / 1000;
 
-    // Sort matches
+    // Sort matches and trim to maxResults
     this.allMatches.sort((a, b) => a - b);
+    if (this.allMatches.length > this.maxResults) {
+      this.allMatches = this.allMatches.slice(0, this.maxResults);
+    }
 
     this.callbacks.onProgress?.({
       totalChecked,
@@ -152,6 +163,15 @@ export class WorkerPool {
     this.searchId = null;
   }
 
+  private cancelAllWorkers(): void {
+    if (!this.searchId) return;
+
+    const id = this.searchId;
+    this.workers.forEach((worker) => {
+      worker.postMessage({ type: 'cancel', id } as WorkerRequest);
+    });
+  }
+
   async search(
     filter: FilterGroup,
     startSeed: number,
@@ -160,8 +180,9 @@ export class WorkerPool {
     callbacks: SearchCallbacks,
     version: string = '1.6'
   ): Promise<void> {
+    // Cancel any existing search before starting a new one
     if (this.searchId) {
-      throw new Error('Search already in progress');
+      this.cancel();
     }
 
     if (this.readyWorkers.size !== this.workers.length) {
@@ -172,9 +193,14 @@ export class WorkerPool {
     this.callbacks = callbacks;
     this.startTime = Date.now();
     this.totalSeeds = endSeed - startSeed + 1;
+    this.maxResults = maxResults;
     this.checkedByWorker.clear();
+    this.foundByWorker.clear();
     this.allMatches = [];
     this.completedWorkers = 0;
+
+    // Convert filter to JSON string for WASM
+    const filterJson = filterToSearchJson(filter);
 
     // Divide work among workers
     const seedsPerWorker = Math.ceil(this.totalSeeds / this.workers.length);
@@ -182,21 +208,19 @@ export class WorkerPool {
     this.workers.forEach((worker, index) => {
       this.setupWorkerHandlers(worker);
       this.checkedByWorker.set(worker, 0);
+      this.foundByWorker.set(worker, 0);
 
       const workerStart = startSeed + index * seedsPerWorker;
       const workerEnd = Math.min(workerStart + seedsPerWorker - 1, endSeed);
 
       if (workerStart <= endSeed) {
-        // Clone filter to plain object - Svelte 5 reactive proxies can't be cloned via postMessage
-        const plainFilter = JSON.parse(JSON.stringify(filter));
-
         worker.postMessage({
           type: 'search',
           id: this.searchId,
+          filterJson,
           startSeed: workerStart,
           endSeed: workerEnd,
-          filter: plainFilter,
-          maxResults: Math.ceil(maxResults / this.workers.length) + 10, // Allow some buffer
+          maxResults, // Each worker gets full limit; we cancel globally when reached
           version
         } as WorkerRequest);
       } else {

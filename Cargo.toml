@@ -15,17 +15,21 @@ default = ["console_error_panic_hook"]
 wasm-bindgen = "0.2.93"
 js-sys = "0.3.70"
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 serde-wasm-bindgen = "0.6"
 xxhash-rust = { version = "0.8", features = ["xxh32"] }
+instant = { version = "0.1", features = ["wasm-bindgen"] }
 
 # The `console_error_panic_hook` crate provides better debugging of panics
 console_error_panic_hook = { version = "0.1.7", optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.43"
-serde_json = "1.0"
 flate2 = "1.0"
 
 [profile.release]
 opt-level = 3
 lto = true
+
+# For profiling, use: wasm-pack build --profiling --target web --out-dir pkg
+# This keeps function names visible in Chrome DevTools Performance tab

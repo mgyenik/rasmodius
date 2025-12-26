@@ -42,6 +42,7 @@ struct GoldenData {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct Metadata {
     generated_at: String,
     reference_commit: String,
@@ -305,90 +306,104 @@ fn test_cart_items_comprehensive() {
     );
 }
 
-// Daily luck and dish of day tests are commented out until those mechanics are implemented
-// with version support. Uncomment when ready.
+// Daily luck and dish of day are version-independent mechanics
+// We test against v1.6 data (all versions should have identical values)
 
-/*
 #[test]
 fn test_daily_luck_comprehensive() {
+    use rasmodius::mechanics::daily_luck::daily_luck;
+
     let data = load_golden_data();
     let mut failures: Vec<String> = Vec::new();
     let mut total_tests = 0;
 
     for seed_data in &data.seeds {
         let seed = seed_data.seed;
+        // Daily luck is version-independent, so just test v1.6 data
+        let version_data = &seed_data.versions.v1_6;
 
-        for version in [GameVersion::V1_3, GameVersion::V1_4, GameVersion::V1_5, GameVersion::V1_6] {
-            let version_data = get_version_data(&seed_data.versions, version);
+        for test in &version_data.daily_luck {
+            total_tests += 1;
+            let actual = daily_luck(seed, test.day, 0, false);
 
-            for test in &version_data.daily_luck {
-                total_tests += 1;
-                let actual = daily_luck(seed, test.day, 0, false, version);
-
-                if (actual - test.luck).abs() > 0.00001 {
-                    failures.push(format!(
-                        "daily_luck: seed={} day={} version={:?}: expected={}, got={}",
-                        seed, test.day, version, test.luck, actual
-                    ));
-                }
+            if (actual - test.luck).abs() > 0.00001 {
+                failures.push(format!(
+                    "daily_luck: seed={} day={}: expected={}, got={}",
+                    seed, test.day, test.luck, actual
+                ));
             }
         }
     }
 
     if !failures.is_empty() {
-        let sample_failures: Vec<_> = failures.iter().take(20).collect();
+        let sample: String = failures.iter().take(20).cloned().collect::<Vec<_>>().join("\n");
         panic!(
             "\n{} daily luck failures out of {} tests:\n{}{}",
             failures.len(),
             total_tests,
-            sample_failures.join("\n"),
-            if failures.len() > 20 { format!("\n... and {} more", failures.len() - 20) } else { String::new() }
+            sample,
+            if failures.len() > 20 {
+                format!("\n... and {} more", failures.len() - 20)
+            } else {
+                String::new()
+            }
         );
     }
 
-    println!("Daily luck: {}/{} tests passed", total_tests - failures.len(), total_tests);
+    println!(
+        "Daily luck: {}/{} tests passed",
+        total_tests - failures.len(),
+        total_tests
+    );
 }
 
 #[test]
 fn test_dish_of_day_comprehensive() {
+    use rasmodius::mechanics::daily_luck::dish_of_the_day;
+
     let data = load_golden_data();
     let mut failures: Vec<String> = Vec::new();
     let mut total_tests = 0;
 
     for seed_data in &data.seeds {
         let seed = seed_data.seed;
+        // Dish of day is version-independent, so just test v1.6 data
+        let version_data = &seed_data.versions.v1_6;
 
-        for version in [GameVersion::V1_3, GameVersion::V1_4, GameVersion::V1_5, GameVersion::V1_6] {
-            let version_data = get_version_data(&seed_data.versions, version);
+        for test in &version_data.dish_of_day {
+            total_tests += 1;
+            let (actual, _qty) = dish_of_the_day(seed, test.day, 0);
 
-            for test in &version_data.dish_of_day {
-                total_tests += 1;
-                let actual = dish_of_the_day(seed, test.day, version);
-
-                if actual != test.dish {
-                    failures.push(format!(
-                        "dish_of_day: seed={} day={} version={:?}: expected={}, got={}",
-                        seed, test.day, version, test.dish, actual
-                    ));
-                }
+            if actual != test.dish {
+                failures.push(format!(
+                    "dish_of_day: seed={} day={}: expected={}, got={}",
+                    seed, test.day, test.dish, actual
+                ));
             }
         }
     }
 
     if !failures.is_empty() {
-        let sample_failures: Vec<_> = failures.iter().take(20).collect();
+        let sample: String = failures.iter().take(20).cloned().collect::<Vec<_>>().join("\n");
         panic!(
             "\n{} dish of day failures out of {} tests:\n{}{}",
             failures.len(),
             total_tests,
-            sample_failures.join("\n"),
-            if failures.len() > 20 { format!("\n... and {} more", failures.len() - 20) } else { String::new() }
+            sample,
+            if failures.len() > 20 {
+                format!("\n... and {} more", failures.len() - 20)
+            } else {
+                String::new()
+            }
         );
     }
 
-    println!("Dish of day: {}/{} tests passed", total_tests - failures.len(), total_tests);
+    println!(
+        "Dish of day: {}/{} tests passed",
+        total_tests - failures.len(),
+        total_tests
+    );
 }
-*/
 
 /// Quick sanity check that golden data loaded correctly
 #[test]

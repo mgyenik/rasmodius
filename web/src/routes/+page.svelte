@@ -39,28 +39,19 @@
 	let workerPool: WorkerPool | null = null;
 	let workerCount = $state(0);
 
-	// Results
+	// Results - using unified API types
 	let dailyLuck = $state<number | null>(null);
-	let dishOfDay = $state<{ id: number; qty: number } | null>(null);
+	let dishOfDay = $state<{ id: number; quantity: number } | null>(null);
 	let nightEvent = $state<string | null>(null);
 	let weatherTomorrow = $state<string | null>(null);
-	let cartItems = $state<{ id: number; price: number; qty: number }[]>([]);
-	let geodeResults = $state<{ id: number; qty: number }[]>([]);
+	let cartItems = $state<{ id: number; price: number; quantity: number }[]>([]);
+	let geodeResults = $state<{ item_id: number; quantity: number }[]>([]);
 	let monsterFloors = $state<number[]>([]);
 	let darkFloors = $state<number[]>([]);
 	let mushroomFloors = $state<number[]>([]);
 	let redCabbageResult = $state<{ day: number; price: number } | null>(null);
 
 	let wasm: typeof import('rasmodius') | null = $state(null);
-
-	const NIGHT_EVENTS = ['None', 'Fairy', 'Witch', 'Meteor', 'UFO', 'Owl'];
-	const WEATHER_TYPES: Record<number, string> = {
-		0: 'Sunny',
-		1: 'Rain',
-		2: 'Windy',
-		3: 'Storm',
-		5: 'Snow'
-	};
 
 	const SEARCH_RANGES: Record<string, { start: number; end: number; label: string }> = {
 		'100k': { start: 0, end: 99999, label: '100K seeds' },
@@ -115,35 +106,18 @@
 		if (!wasm) return;
 
 		try {
-			dailyLuck = wasm.get_daily_luck(seed, daysPlayed, 0, false);
+			// Use unified predict_day API
+			const prediction = wasm.predict_day(seed, daysPlayed, gameVersion);
+			dailyLuck = prediction.luck;
+			dishOfDay = prediction.dish;
+			nightEvent = prediction.night_event;
+			weatherTomorrow = prediction.weather;
+			cartItems = prediction.cart ?? [];
 
-			const dish = wasm.get_dish_of_the_day(seed, daysPlayed, 0);
-			dishOfDay = { id: dish[0], qty: dish[1] };
+			// Use unified predict_geodes API
+			geodeResults = wasm.predict_geodes(seed, 1, 5, 'omni', gameVersion);
 
-			const event = wasm.get_night_event(seed, daysPlayed, gameVersion);
-			nightEvent = NIGHT_EVENTS[event];
-
-			const weather = wasm.get_weather_tomorrow(seed, daysPlayed, 0, 0, false, gameVersion);
-			weatherTomorrow = WEATHER_TYPES[weather] ?? 'Unknown';
-
-			const dayOfWeek = ((daysPlayed - 1) % 7) + 1;
-			if (dayOfWeek === 5 || dayOfWeek === 7) {
-				const cart = wasm.get_traveling_cart(seed, daysPlayed, gameVersion);
-				cartItems = [];
-				for (let i = 0; i < cart.length; i += 3) {
-					cartItems.push({ id: cart[i], price: cart[i + 1], qty: cart[i + 2] });
-				}
-			} else {
-				cartItems = [];
-			}
-
-			geodeResults = [];
-			for (let i = 1; i <= 5; i++) {
-				const result = wasm.get_geode_item(seed, i, 3, 120, gameVersion);
-				geodeResults.push({ id: result[0], qty: result[1] });
-			}
-
-			// Mine floor conditions
+			// Mine floor conditions - still use batch APIs for efficiency
 			monsterFloors = Array.from(wasm.find_monster_floors(seed, daysPlayed, 1, 50, gameVersion));
 			darkFloors = Array.from(wasm.find_dark_floors(seed, daysPlayed, 1, 50));
 			mushroomFloors = Array.from(wasm.find_mushroom_floors(seed, daysPlayed, 81, 120, gameVersion));
@@ -454,7 +428,7 @@
 						{#if dishOfDay}
 							<div class="flex items-center gap-2">
 								<span class="text-lg font-medium">{getItemName(dishOfDay.id)}</span>
-								<span class="text-gray-500">×{dishOfDay.qty}</span>
+								<span class="text-gray-500">×{dishOfDay.quantity}</span>
 							</div>
 						{/if}
 					</div>
@@ -482,9 +456,9 @@
 						{#each geodeResults as result, i}
 							<div class="text-center p-3 bg-gray-50 rounded-lg">
 								<div class="text-xs text-gray-500 mb-1">#{i + 1}</div>
-								<div class="font-medium text-sm">{getItemName(result.id)}</div>
-								{#if result.qty > 1}
-									<div class="text-xs text-gray-400">×{result.qty}</div>
+								<div class="font-medium text-sm">{getItemName(result.item_id)}</div>
+								{#if result.quantity > 1}
+									<div class="text-xs text-gray-400">×{result.quantity}</div>
 								{/if}
 							</div>
 						{/each}

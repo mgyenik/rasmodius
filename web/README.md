@@ -1,38 +1,42 @@
-# sv
+# Rasmodius Web Frontend
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+SvelteKit frontend for the Rasmodius seed finder.
 
-## Creating a project
+## Development
 
-If you're seeing this, you've probably already done this step. Congrats!
-
-```sh
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+```bash
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
 ## Building
 
-To create a production version of your app:
-
-```sh
-npm run build
+```bash
+npm run build      # Builds WASM + frontend
+npm run preview    # Preview production build
 ```
 
-You can preview the production build with `npm run preview`.
+## Testing
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+```bash
+npm test           # Unit tests (Vitest)
+npm run test:e2e   # E2E tests (Playwright)
+```
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/routes/+page.svelte` | Main application UI |
+| `src/lib/workers/WorkerPool.ts` | Coordinates parallel search workers |
+| `src/lib/workers/search.worker.ts` | Thin WASM wrapper (~100 lines) |
+| `src/lib/utils/filterToJson.ts` | Converts UI filters to WASM JSON format |
+| `src/lib/components/filter-builder/` | Filter UI components |
+
+## Architecture
+
+The frontend is intentionally thin:
+- UI only builds filters - no evaluation logic
+- WorkerPool handles parallelization and global coordination
+- Workers are minimal wrappers around WASM `search_range()`
+- All heavy computation happens in Rust/WASM
