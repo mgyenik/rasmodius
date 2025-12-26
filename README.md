@@ -1,8 +1,15 @@
 # Rasmodius
 
-A high-performance Stardew Valley seed finder. Predict daily luck, night events, traveling cart stock, geode contents, mine conditions, and more.
+A high-performance Stardew Valley seed finder for speedrunners and challenge players. Search millions of seeds to find ones with specific characteristics, then explore them with dynamic data panels.
 
 **[Try it live](https://mgyenik.github.io/rasmodius/)**
+
+## Features
+
+- **Search** - Find seeds matching complex criteria: cart items, lucky days, night events, weather, geodes, mine conditions
+- **Explore** - Dynamic panels show predictions for any seed: daily luck, weather forecasts, cart inventories, geode contents, mine floors
+- **Filter → Explore** - Click a search result to auto-generate explore panels based on your filter criteria
+- **Shareable URLs** - Both search filters and explore state are encoded in the URL for easy sharing
 
 ## Credits
 
@@ -51,16 +58,35 @@ Claude code was used extensively developing this codebase as a fun holiday proje
 
 ### WASM API
 
-The library exports a minimal, unified API:
+The library exports a unified API for both search and exploration:
 
+**Single-day predictions:**
 | Export | Purpose |
 |--------|---------|
 | `predict_day(seed, day, version)` | All daily mechanics: luck, dish, weather, night event, cart |
+
+**Range predictions (for explore panels):**
+| Export | Purpose |
+|--------|---------|
+| `predict_luck_range(seed, start, end)` | Daily luck for a range of days |
+| `predict_weather_range(seed, start, end, version)` | Weather forecasts for a range |
+| `predict_night_events_range(seed, start, end, version)` | Night events for a range |
+| `predict_dish_range(seed, start, end)` | Dish of the day for a range |
+| `predict_cart_range(seed, start, end, version)` | Cart inventories for cart days in range |
 | `predict_geodes(seed, start, count, type, version)` | Geode sequence prediction |
-| `find_monster_floors(seed, day, start, end, version)` | Batch monster floor query |
-| `find_dark_floors(seed, day, start, end)` | Batch dark floor query |
-| `find_mushroom_floors(seed, day, start, end, version)` | Batch mushroom floor query |
+| `predict_mine_floors(seed, day, start, end, version)` | Mine floor conditions |
+
+**Batch queries:**
+| Export | Purpose |
+|--------|---------|
+| `find_monster_floors(seed, day, start, end, version)` | Monster floors in range |
+| `find_dark_floors(seed, day, start, end)` | Dark floors in range |
+| `find_mushroom_floors(seed, day, start, end, version)` | Mushroom floors in range |
 | `find_item_in_cart(seed, item, max_days, version)` | Find item across cart days |
+
+**Search:**
+| Export | Purpose |
+|--------|---------|
 | `search_range(filter, start, end, max, version, on_progress, on_match)` | Search with filter |
 
 All mechanics logic lives in `src/mechanics/` and is tested independently. WASM exports are thin wrappers.
@@ -79,16 +105,11 @@ All mechanics logic lives in `src/mechanics/` and is tested independently. WASM 
 
 ### Why WASM (not pure JavaScript)?
 
-The C# `Random` class uses a 56-element circular buffer with specific initialization constants. JavaScript's `Math.random()` can't replicate this. We need bit-exact reproduction of:
-- 21-multiplicative stride initialization
-- 4 shuffle passes with modular arithmetic
-- Subtractive generator with specific wrap-around behavior
-
-Rust compiles to WASM with predictable integer semantics matching C#.
+FAST! And fun
 
 ### Why NOT WebGPU/WebGL?
 
-The game's RNG has heavy branch divergence: nested conditionals, variable-length loops, early exits. GPU compute shaders execute in lockstep—all threads must wait for the longest branch path. For this workload, CPU-based WASM is 10-100x faster than GPU compute.
+The game's RNG has heavy branch divergence: nested conditionals, variable-length loops, early exits. GPU compute shaders execute in lockstep—all threads must wait for the longest branch path.
 
 ### Filter Evaluation in WASM
 
@@ -176,10 +197,19 @@ rasmodius/
 └── web/
     ├── src/
     │   ├── lib/
-    │   │   ├── components/     # UI components
+    │   │   ├── components/
+    │   │   │   ├── filter-builder/  # Search filter UI
+    │   │   │   │   ├── FilterBuilder.svelte
+    │   │   │   │   ├── FilterGroup.svelte
+    │   │   │   │   └── FilterConditionEditor.svelte
+    │   │   │   └── explore/         # Dynamic explore panels
+    │   │   │       ├── ExploreView.svelte
+    │   │   │       ├── PanelContainer.svelte
+    │   │   │       ├── AddPanelMenu.svelte
+    │   │   │       └── panels/      # Individual panel types
     │   │   ├── workers/        # WorkerPool + search.worker
-    │   │   ├── types/          # TypeScript types
-    │   │   └── utils/          # filterToJson, urlSerializer
+    │   │   ├── types/          # TypeScript types (filters, explorePanels)
+    │   │   └── utils/          # filterToPanels, urlSerializer
     │   └── routes/
     │       └── +page.svelte
     └── e2e/                    # Playwright tests
@@ -190,7 +220,7 @@ rasmodius/
 ### Prerequisites
 
 - Rust (via rustup)
-- Node.js 20+
+- Node.js 22+
 - wasm-pack (`cargo install wasm-pack`)
 
 ### Build WASM

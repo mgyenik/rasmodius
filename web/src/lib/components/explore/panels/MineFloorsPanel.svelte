@@ -1,0 +1,98 @@
+<script lang="ts">
+	import type { MineFloorsPanel } from '$lib/types/explorePanels';
+
+	type FloorPrediction = {
+		floor: number;
+		is_monster_floor: boolean;
+		is_dark_floor: boolean;
+		is_mushroom_floor: boolean;
+	};
+	type WasmModule = {
+		predict_mine_floors: (
+			seed: number,
+			day: number,
+			startFloor: number,
+			endFloor: number,
+			version: string
+		) => FloorPrediction[];
+	};
+
+	let {
+		panel,
+		seed,
+		version,
+		wasm
+	}: {
+		panel: MineFloorsPanel;
+		seed: number;
+		version: string;
+		wasm: WasmModule;
+	} = $props();
+
+	let floorData: FloorPrediction[] = $derived.by(() => {
+		if (!wasm) return [];
+		return wasm.predict_mine_floors(
+			seed,
+			panel.day,
+			panel.floorRange.start,
+			panel.floorRange.end,
+			version
+		);
+	});
+
+	// Group floors into ranges of 10 for display
+	let floorGroups = $derived.by(() => {
+		const groups: FloorPrediction[][] = [];
+		for (let i = 0; i < floorData.length; i += 10) {
+			groups.push(floorData.slice(i, i + 10));
+		}
+		return groups;
+	});
+
+	function getFloorClass(floor: FloorPrediction): string {
+		if (floor.is_mushroom_floor) return 'bg-amber-100 text-amber-800';
+		if (floor.is_monster_floor) return 'bg-red-100 text-red-800';
+		if (floor.is_dark_floor) return 'bg-gray-300 text-gray-800';
+		return 'bg-gray-50 text-gray-600';
+	}
+
+	function getFloorIcon(floor: FloorPrediction): string {
+		if (floor.is_mushroom_floor) return '🍄';
+		if (floor.is_monster_floor) return '👹';
+		if (floor.is_dark_floor) return '🌑';
+		return '';
+	}
+
+	function getFloorTitle(floor: FloorPrediction): string {
+		const traits: string[] = [];
+		if (floor.is_mushroom_floor) traits.push('Mushroom');
+		if (floor.is_monster_floor) traits.push('Monster');
+		if (floor.is_dark_floor) traits.push('Dark');
+		return traits.length > 0 ? `Floor ${floor.floor}: ${traits.join(', ')}` : `Floor ${floor.floor}`;
+	}
+</script>
+
+<div class="space-y-1">
+	{#each floorGroups as group}
+		<div class="flex gap-0.5">
+			{#each group as floor}
+				<div
+					class="w-7 h-7 flex items-center justify-center rounded text-xs font-medium {getFloorClass(floor)}"
+					title={getFloorTitle(floor)}
+				>
+					{#if getFloorIcon(floor)}
+						<span class="text-sm">{getFloorIcon(floor)}</span>
+					{:else}
+						{floor.floor}
+					{/if}
+				</div>
+			{/each}
+		</div>
+	{/each}
+</div>
+
+<div class="flex gap-3 mt-2 text-xs text-gray-500">
+	<span><span class="inline-block w-3 h-3 bg-red-100 rounded mr-1"></span>Monster</span>
+	<span><span class="inline-block w-3 h-3 bg-gray-300 rounded mr-1"></span>Dark</span>
+	<span><span class="inline-block w-3 h-3 bg-amber-100 rounded mr-1"></span>Mushroom</span>
+</div>

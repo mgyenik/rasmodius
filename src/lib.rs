@@ -195,3 +195,146 @@ pub fn find_item_in_cart(
     }
 }
 
+// ============================================================================
+// Explore API - Batch Range Queries
+// ============================================================================
+
+/// Predict daily luck for a range of days.
+/// Returns array of {day, luck} objects.
+#[wasm_bindgen]
+pub fn predict_luck_range(seed: i32, start_day: i32, end_day: i32) -> JsValue {
+    let results: Vec<DayLuck> = (start_day..=end_day)
+        .map(|day| DayLuck {
+            day,
+            luck: mechanics::daily_luck(seed, day, 0, false),
+        })
+        .collect();
+
+    serde_wasm_bindgen::to_value(&results).unwrap()
+}
+
+/// Predict weather for a range of days.
+/// Returns array of {day, weather} objects.
+#[wasm_bindgen]
+pub fn predict_weather_range(seed: i32, start_day: i32, end_day: i32, version: &str) -> JsValue {
+    let v = GameVersion::from_str(version);
+    let results: Vec<DayWeather> = (start_day..=end_day)
+        .map(|day| {
+            let code = mechanics::weather_tomorrow(seed, day, 0, 0, false, v).to_code();
+            DayWeather {
+                day,
+                weather: WeatherType::from_code(code),
+            }
+        })
+        .collect();
+
+    serde_wasm_bindgen::to_value(&results).unwrap()
+}
+
+/// Predict night events for a range of days.
+/// Returns array of {day, event} objects. Only days with events are included.
+#[wasm_bindgen]
+pub fn predict_night_events_range(
+    seed: i32,
+    start_day: i32,
+    end_day: i32,
+    version: &str,
+) -> JsValue {
+    let v = GameVersion::from_str(version);
+    let results: Vec<DayNightEvent> = (start_day..=end_day)
+        .map(|day| {
+            let event = match mechanics::night_event(seed, day, v) {
+                None => NightEventType::None,
+                Some(mechanics::NightEvent::Fairy) => NightEventType::Fairy,
+                Some(mechanics::NightEvent::Witch) => NightEventType::Witch,
+                Some(mechanics::NightEvent::Meteor) => NightEventType::Meteor,
+                Some(mechanics::NightEvent::Ufo) => NightEventType::Ufo,
+                Some(mechanics::NightEvent::Owl) => NightEventType::Owl,
+                Some(mechanics::NightEvent::Earthquake) => NightEventType::Earthquake,
+            };
+            DayNightEvent { day, event }
+        })
+        .collect();
+
+    serde_wasm_bindgen::to_value(&results).unwrap()
+}
+
+/// Predict dish of the day for a range of days.
+/// Returns array of {day, dish} objects.
+#[wasm_bindgen]
+pub fn predict_dish_range(seed: i32, start_day: i32, end_day: i32) -> JsValue {
+    let results: Vec<DayDish> = (start_day..=end_day)
+        .map(|day| {
+            let (id, quantity) = mechanics::dish_of_the_day(seed, day, 0);
+            DayDish {
+                day,
+                dish: DishOfDay { id, quantity },
+            }
+        })
+        .collect();
+
+    serde_wasm_bindgen::to_value(&results).unwrap()
+}
+
+/// Predict cart contents for a range of days.
+/// Returns array of {day, items} objects. Only cart days (Fri/Sun) are included.
+#[wasm_bindgen]
+pub fn predict_cart_range(seed: i32, start_day: i32, end_day: i32, version: &str) -> JsValue {
+    let v = GameVersion::from_str(version);
+    let results: Vec<DayCart> = (start_day..=end_day)
+        .filter(|&day| is_cart_day(day))
+        .map(|day| {
+            let items = mechanics::get_cart_for_day(seed, day, v)
+                .into_iter()
+                .map(|item| CartItem {
+                    id: item.item_id,
+                    price: item.price,
+                    quantity: item.quantity,
+                })
+                .collect();
+            DayCart { day, items }
+        })
+        .collect();
+
+    serde_wasm_bindgen::to_value(&results).unwrap()
+}
+
+/// Predict mine floors for a range.
+/// Returns array of FloorPrediction objects.
+#[wasm_bindgen]
+pub fn predict_mine_floors(
+    seed: i32,
+    day: i32,
+    start_floor: i32,
+    end_floor: i32,
+    version: &str,
+) -> JsValue {
+    let v = GameVersion::from_str(version);
+
+    // Get all special floors in range
+    let monster_floors: std::collections::HashSet<i32> =
+        mechanics::find_monster_floors(seed, day, start_floor, end_floor, v)
+            .into_iter()
+            .collect();
+    let dark_floors: std::collections::HashSet<i32> =
+        mechanics::find_dark_floors(seed, day, start_floor, end_floor)
+            .into_iter()
+            .collect();
+    let mushroom_floors: std::collections::HashSet<i32> =
+        mechanics::find_mushroom_floors(seed, day, start_floor, end_floor, v)
+            .into_iter()
+            .collect();
+
+    let results: Vec<FloorPrediction> = (start_floor..=end_floor)
+        .map(|floor| FloorPrediction {
+            floor,
+            is_monster_floor: monster_floors.contains(&floor),
+            is_dark_floor: dark_floors.contains(&floor),
+            is_mushroom_floor: mushroom_floors.contains(&floor),
+            chest: None, // TODO: Add chest prediction if needed
+        })
+        .collect();
+
+    serde_wasm_bindgen::to_value(&results).unwrap()
+}
+

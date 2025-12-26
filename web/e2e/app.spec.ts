@@ -49,13 +49,13 @@ test.describe('App Loading', () => {
     // Switch to Explore tab
     await page.getByRole('button', { name: 'Explore Seed' }).click();
 
-    // Check that various sections are visible
-    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Night Event' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: "Tomorrow's Weather" })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Saloon Dish' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Next 5 Omni Geodes' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Mine Floors (1-50)' })).toBeVisible();
+    // Check that default panels are visible (new dynamic panel system)
+    await expect(page.getByText('Daily Luck')).toBeVisible();
+    await expect(page.getByText('Weather')).toBeVisible();
+    await expect(page.getByText('Night Events')).toBeVisible();
+    await expect(page.getByText('Traveling Cart')).toBeVisible();
+    // Check Add Panel button
+    await expect(page.getByRole('button', { name: 'Add Panel' })).toBeVisible();
   });
 });
 
@@ -66,30 +66,32 @@ test.describe('Seed Explorer', () => {
 
     // Switch to Explore tab
     await page.getByRole('button', { name: 'Explore Seed' }).click();
-    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
+    await expect(page.getByText('Daily Luck')).toBeVisible();
 
-    // Change the seed
-    const seedInput = page.locator('input#seed');
+    // Change the seed - now uses explore-seed id
+    const seedInput = page.locator('input#explore-seed');
     await seedInput.fill('99999');
 
     // The page should update (we can't easily verify the values, but it shouldn't error)
-    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
+    await expect(page.getByText('Daily Luck')).toBeVisible();
   });
 
-  test('can change day value', async ({ page }) => {
+  test('can add and remove panels', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
 
     // Switch to Explore tab
     await page.getByRole('button', { name: 'Explore Seed' }).click();
-    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
+    await expect(page.getByText('Daily Luck')).toBeVisible();
 
-    // Change the day
-    const dayInput = page.locator('input#day');
-    await dayInput.fill('10');
+    // Click Add Panel
+    await page.getByRole('button', { name: 'Add Panel' }).click();
 
-    // Should still show data
-    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
+    // Select Omni Geodes from the dropdown
+    await page.getByRole('button', { name: 'Omni Geodes' }).click();
+
+    // Should see the new panel
+    await expect(page.getByText('Omni Geodes')).toBeVisible();
   });
 
   test('copy link button works', async ({ page, context }) => {
@@ -101,7 +103,7 @@ test.describe('Seed Explorer', () => {
 
     // Switch to Explore tab
     await page.getByRole('button', { name: 'Explore Seed' }).click();
-    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
+    await expect(page.getByText('Daily Luck')).toBeVisible();
 
     // Click the copy link button
     await page.getByRole('button', { name: 'Copy Link to This Seed' }).click();
@@ -191,21 +193,18 @@ test.describe('Seed Search', () => {
 
 test.describe('URL Parameters', () => {
   test('loads seed from URL', async ({ page, baseURL }) => {
-    await page.goto(`${baseURL}?seed=54321&day=15`);
+    await page.goto(`${baseURL}?seed=54321`);
 
     // Wait for page to load
     await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
 
     // Switch to Explore tab to see the seed input
     await page.getByRole('button', { name: 'Explore Seed' }).click();
-    await expect(page.getByRole('heading', { name: 'Daily Luck' })).toBeVisible();
+    await expect(page.getByText('Daily Luck')).toBeVisible();
 
-    // Check that the inputs have the correct values
-    const seedInput = page.locator('input#seed');
+    // Check that the seed input has the correct value
+    const seedInput = page.locator('input#explore-seed');
     await expect(seedInput).toHaveValue('54321');
-
-    const dayInput = page.locator('input#day');
-    await expect(dayInput).toHaveValue('15');
   });
 
   test('loads filter from URL and switches to search tab', async ({ page, baseURL }) => {

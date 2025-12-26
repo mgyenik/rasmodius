@@ -176,3 +176,42 @@ pub fn is_cart_day(day: i32) -> bool {
     let day_of_week = ((day - 1) % 7) + 1;
     day_of_week == 5 || day_of_week == 7 // Friday or Sunday
 }
+
+// ============================================================================
+// Range Prediction Types (for Explore Panels)
+// ============================================================================
+
+/// Daily luck for a single day (used in batch queries).
+#[derive(Debug, Clone, Serialize)]
+pub struct DayLuck {
+    pub day: i32,
+    pub luck: f64,
+}
+
+/// Weather for a single day (used in batch queries).
+#[derive(Debug, Clone, Serialize)]
+pub struct DayWeather {
+    pub day: i32,
+    pub weather: WeatherType,
+}
+
+/// Night event for a single day (used in batch queries).
+#[derive(Debug, Clone, Serialize)]
+pub struct DayNightEvent {
+    pub day: i32,
+    pub event: NightEventType,
+}
+
+/// Dish of the day for a single day (used in batch queries).
+#[derive(Debug, Clone, Serialize)]
+pub struct DayDish {
+    pub day: i32,
+    pub dish: DishOfDay,
+}
+
+/// Cart inventory for a single day (used in batch queries).
+#[derive(Debug, Clone, Serialize)]
+pub struct DayCart {
+    pub day: i32,
+    pub items: Vec<CartItem>,
+}

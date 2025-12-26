@@ -7,6 +7,8 @@
 
 import type { FilterRoot, FilterCondition, FilterGroup, DaySpec } from '$lib/types/filters';
 import { createEmptyFilter } from '$lib/types/filters';
+import type { ExplorePanel, ExploreState } from '$lib/types/explorePanels';
+import { generatePanelId } from '$lib/types/explorePanels';
 
 // Short keys for compact encoding
 const CONDITION_TYPE_MAP: Record<string, string> = {
@@ -380,4 +382,251 @@ export function updateURLWithVersion(version: string): void {
   url.searchParams.set('v', version);
 
   window.history.replaceState({}, '', url.toString());
+}
+
+// ============================================================================
+// Explore State Serialization
+// ============================================================================
+
+// Panel type short codes
+const PANEL_TYPE_MAP: Record<string, string> = {
+  cart: 'c',
+  night_events: 'n',
+  daily_luck: 'l',
+  weather: 'w',
+  geodes: 'g',
+  mine_floors: 'm',
+  dish: 'd',
+};
+
+const PANEL_TYPE_REVERSE: Record<string, string> = Object.fromEntries(
+  Object.entries(PANEL_TYPE_MAP).map(([k, v]) => [v, k])
+);
+
+// Geode type short codes
+const GEODE_TYPE_MAP: Record<string, string> = {
+  geode: 'r',
+  frozen: 'f',
+  magma: 'm',
+  omni: 'o',
+  trove: 't',
+  coconut: 'c',
+};
+
+const GEODE_TYPE_REVERSE: Record<string, string> = Object.fromEntries(
+  Object.entries(GEODE_TYPE_MAP).map(([k, v]) => [v, k])
+);
+
+/**
+ * Compress an ExplorePanel to a compact object
+ */
+function compressPanel(panel: ExplorePanel): Record<string, unknown> {
+  const base: Record<string, unknown> = { t: PANEL_TYPE_MAP[panel.type] };
+
+  switch (panel.type) {
+    case 'cart':
+    case 'night_events':
+    case 'daily_luck':
+    case 'weather':
+    case 'dish':
+      base.ds = panel.dayRange.start;
+      base.de = panel.dayRange.end;
+      break;
+    case 'geodes':
+      base.gt = GEODE_TYPE_MAP[panel.geodeType];
+      base.gs = panel.geodeRange.start;
+      base.ge = panel.geodeRange.end;
+      break;
+    case 'mine_floors':
+      base.d = panel.day;
+      base.fs = panel.floorRange.start;
+      base.fe = panel.floorRange.end;
+      break;
+  }
+
+  return base;
+}
+
+/**
+ * Decompress a compact object back to ExplorePanel
+ */
+function decompressPanel(obj: Record<string, unknown>): ExplorePanel {
+  const type = PANEL_TYPE_REVERSE[obj.t as string] as ExplorePanel['type'];
+  const id = generatePanelId();
+
+  switch (type) {
+    case 'cart':
+      return {
+        type: 'cart',
+        id,
+        dayRange: { start: obj.ds as number, end: obj.de as number },
+      };
+    case 'night_events':
+      return {
+        type: 'night_events',
+        id,
+        dayRange: { start: obj.ds as number, end: obj.de as number },
+      };
+    case 'daily_luck':
+      return {
+        type: 'daily_luck',
+        id,
+        dayRange: { start: obj.ds as number, end: obj.de as number },
+      };
+    case 'weather':
+      return {
+        type: 'weather',
+        id,
+        dayRange: { start: obj.ds as number, end: obj.de as number },
+      };
+    case 'dish':
+      return {
+        type: 'dish',
+        id,
+        dayRange: { start: obj.ds as number, end: obj.de as number },
+      };
+    case 'geodes':
+      return {
+        type: 'geodes',
+        id,
+        geodeType: GEODE_TYPE_REVERSE[obj.gt as string] as
+          | 'geode'
+          | 'frozen'
+          | 'magma'
+          | 'omni'
+          | 'trove'
+          | 'coconut',
+        geodeRange: { start: obj.gs as number, end: obj.ge as number },
+      };
+    case 'mine_floors':
+      return {
+        type: 'mine_floors',
+        id,
+        day: obj.d as number,
+        floorRange: { start: obj.fs as number, end: obj.fe as number },
+      };
+    default:
+      throw new Error(`Unknown panel type: ${type}`);
+  }
+}
+
+/**
+ * Encode explore state to a URL-safe string
+ */
+export function encodeExploreState(state: ExploreState): string {
+  if (state.panels.length === 0) {
+    return '';
+  }
+
+  const compressed = {
+    p: state.panels.map(compressPanel),
+  };
+
+  const json = JSON.stringify(compressed);
+
+  // Use base64url encoding
+  const encoded = btoa(json)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+  return encoded;
+}
+
+/**
+ * Decode a URL-safe string back to explore panels
+ */
+export function decodeExploreState(encoded: string): ExplorePanel[] | null {
+  if (!encoded) {
+    return null;
+  }
+
+  try {
+    let base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+
+    while (base64.length % 4) {
+      base64 += '=';
+    }
+
+    const json = atob(base64);
+    const compressed = JSON.parse(json);
+
+    return (compressed.p as Record<string, unknown>[]).map(decompressPanel);
+  } catch (e) {
+    console.error('Failed to decode explore state:', e);
+    return null;
+  }
+}
+
+/**
+ * Get explore panels from URL
+ */
+export function getExploreFromURL(): ExplorePanel[] | null {
+  if (typeof window === 'undefined') return null;
+
+  const params = new URLSearchParams(window.location.search);
+  const exploreParam = params.get('e');
+
+  if (!exploreParam) return null;
+
+  return decodeExploreState(exploreParam);
+}
+
+/**
+ * Update URL with explore state
+ */
+export function updateURLWithExplore(panels: ExplorePanel[], seed?: number): void {
+  if (typeof window === 'undefined') return;
+
+  const url = new URL(window.location.href);
+
+  // Encode panels
+  const state: ExploreState = { seed: seed ?? 1, panels };
+  const encoded = encodeExploreState(state);
+
+  if (encoded) {
+    url.searchParams.set('e', encoded);
+  } else {
+    url.searchParams.delete('e');
+  }
+
+  // Update seed if provided
+  if (seed !== undefined) {
+    url.searchParams.set('seed', seed.toString());
+  }
+
+  window.history.replaceState({}, '', url.toString());
+}
+
+/**
+ * Get a shareable URL with filter, explore state, and seed
+ */
+export function getShareableExploreURL(
+  filter: FilterRoot | null,
+  panels: ExplorePanel[],
+  seed: number
+): string {
+  if (typeof window === 'undefined') return '';
+
+  const url = new URL(window.location.origin + window.location.pathname);
+
+  // Add filter if present
+  if (filter && filter.conditions.length > 0) {
+    const filterEncoded = encodeFilter(filter);
+    if (filterEncoded) {
+      url.searchParams.set('f', filterEncoded);
+    }
+  }
+
+  // Add explore state
+  const state: ExploreState = { seed, panels };
+  const exploreEncoded = encodeExploreState(state);
+  if (exploreEncoded) {
+    url.searchParams.set('e', exploreEncoded);
+  }
+
+  // Add seed
+  url.searchParams.set('seed', seed.toString());
+
+  return url.toString();
 }
