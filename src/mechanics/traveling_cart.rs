@@ -326,9 +326,147 @@ pub fn get_cart_for_day(game_id: i32, day_number: i32, version: GameVersion) -> 
 
 /// Check if the traveling cart has a specific item on a given day
 pub fn cart_has_item(game_id: i32, day_number: i32, target_item: i32, version: GameVersion) -> bool {
-    get_cart_for_day(game_id, day_number, version)
-        .iter()
-        .any(|item| item.item_id == target_item)
+    match version {
+        GameVersion::V1_6 => cart_has_item_v16_fast(game_id, day_number, target_item),
+        GameVersion::V1_4 | GameVersion::V1_5 => {
+            cart_has_item_1_4_fast(game_id.wrapping_add(day_number), target_item)
+        }
+        GameVersion::V1_3 => cart_has_item_pre14_fast(game_id.wrapping_add(day_number), target_item),
+    }
+}
+
+/// Fast cart item check for pre-1.4 - no allocations
+fn cart_has_item_pre14_fast(seed: i32, target_item: i32) -> bool {
+    let mut rng = CSRandom::new(seed);
+
+    for _ in 0..10 {
+        let roll = rng.next_range(2, 790);
+        let item_id = CART_ROLL_TO_ID_PRE14[(roll - 2) as usize];
+
+        // Skip price/quantity RNG calls - we don't need them for has_item check
+        // But we MUST consume them to maintain RNG sequence
+        let _ = rng.next_range(1, 11); // random_price part 1
+        let _ = rng.next_range(3, 6); // scaled_price part 2
+        let _ = rng.sample(); // quantity check
+
+        if item_id == target_item {
+            return true;
+        }
+    }
+    false
+}
+
+/// Fast cart item check for 1.4/1.5 - uses fixed-size array instead of HashSet
+fn cart_has_item_1_4_fast(seed: i32, target_item: i32) -> bool {
+    let mut rng = CSRandom::new(seed);
+    // Fixed-size array for seen items (max 10 items, but we might check more due to duplicates)
+    let mut seen: [i32; 10] = [0; 10];
+    let mut seen_count = 0;
+
+    for _ in 0..10 {
+        let mut item_id = rng.next_range(2, 790);
+
+        loop {
+            item_id = (item_id + 1) % 790;
+
+            if is_valid_cart_item_1_4(item_id) {
+                // Consume RNG for price/quantity (must happen for every valid item tested)
+                let _ = rng.next_range(1, 11);
+                let _ = rng.next_range(3, 6);
+                let _ = rng.sample();
+
+                // Check if already seen using linear scan (fast for 10 items)
+                let mut already_seen = false;
+                for i in 0..seen_count {
+                    if seen[i] == item_id {
+                        already_seen = true;
+                        break;
+                    }
+                }
+
+                if !already_seen {
+                    if item_id == target_item {
+                        return true;
+                    }
+                    seen[seen_count] = item_id;
+                    seen_count += 1;
+                    break;
+                }
+            }
+        }
+    }
+    false
+}
+
+/// Fast cart item check for 1.6 - avoids HashMap and full sort
+/// Uses fixed-size arrays and tracks only what's needed
+fn cart_has_item_v16_fast(game_id: i32, day: i32, target_item: i32) -> bool {
+    let seed = get_random_seed_1_6(day, game_id / 2);
+    let mut rng = CSRandom::new(seed);
+
+    // We need to track items with their shuffle keys to find the 10 lowest
+    // Use a fixed-size array, handling collisions by overwriting (later wins)
+    // Format: (key, id) - we don't need price for has_item check
+    const MAX_CANDIDATES: usize = 512; // More than enough for filtered items
+    let mut candidates: [(i32, i32); MAX_CANDIDATES] = [(i32::MAX, 0); MAX_CANDIDATES];
+    let mut candidate_count: usize = 0;
+
+    // Step 1: Generate shuffle keys for all objects
+    for &(id, price, offlimits, category, type_excluded) in CART_OBJECTS_1_6 {
+        let key = rng.next(None, None);
+
+        // Apply all filters
+        if price == 0 || offlimits || id < 2 || id > 789 {
+            continue;
+        }
+        // Category checks
+        if category >= 0 || category == -999 || type_excluded {
+            continue;
+        }
+
+        // Handle collision: find if key exists, overwrite if so
+        let mut found_slot = false;
+        for i in 0..candidate_count {
+            if candidates[i].0 == key {
+                candidates[i] = (key, id); // Later overwrites earlier
+                found_slot = true;
+                break;
+            }
+        }
+        if !found_slot && candidate_count < MAX_CANDIDATES {
+            candidates[candidate_count] = (key, id);
+            candidate_count += 1;
+        }
+    }
+
+    // Step 2: Find the 10 items with lowest keys using partial selection
+    // We use a simple approach: find min 10 times
+    let mut selected_count = 0;
+    let mut used: [bool; MAX_CANDIDATES] = [false; MAX_CANDIDATES];
+
+    while selected_count < 10 && selected_count < candidate_count {
+        // Find minimum unused key
+        let mut min_idx = usize::MAX;
+        let mut min_key = i32::MAX;
+        for i in 0..candidate_count {
+            if !used[i] && candidates[i].0 < min_key {
+                min_key = candidates[i].0;
+                min_idx = i;
+            }
+        }
+
+        if min_idx == usize::MAX {
+            break;
+        }
+
+        used[min_idx] = true;
+        if candidates[min_idx].1 == target_item {
+            return true;
+        }
+        selected_count += 1;
+    }
+
+    false
 }
 
 /// Find the first cart day (Friday or Sunday) where a target item appears

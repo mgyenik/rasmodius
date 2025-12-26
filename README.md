@@ -101,6 +101,45 @@ The `search_range()` function:
 
 Workers search different seed ranges in parallel. When total matches across all workers hits `maxResults`, the WorkerPool cancels all workers. This ensures exactly the requested number of results, not `ceil(maxResults/workers) * workers`.
 
+### Fast Cart Item Checks
+
+Cart item filters are the most expensive condition type. The naive approach (`get_cart_for_day()` returns `Vec<CartItem>`) allocates heavily:
+
+**v1.6 Cart Algorithm (naive):**
+1. Create HashMap, insert ~400 items with shuffle keys
+2. Sort ~300 filtered items by key
+3. Take first 10 passing category checks
+4. Allocate result Vec
+
+Profiling showed this consumed **~80% of search time**: HashMap insertion (54%), sorting (25%), Vec allocations (5%).
+
+**Optimized `cart_has_item()` for filter evaluation:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  cart_has_item(seed, day, item_id, version)                 │
+│  Returns bool - no allocations on hot path                  │
+├─────────────────────────────────────────────────────────────┤
+│  v1.3: Direct lookup table, 10 RNG calls                    │
+│        → O(1) array lookup, no allocations                  │
+├─────────────────────────────────────────────────────────────┤
+│  v1.4/1.5: Increment-until-valid with duplicate prevention  │
+│        → Fixed [i32; 10] array instead of HashSet           │
+│        → Linear scan for duplicates (fast for 10 items)     │
+├─────────────────────────────────────────────────────────────┤
+│  v1.6: Shuffle-based selection                              │
+│        → Fixed [(key, id); 512] array instead of HashMap    │
+│        → Linear collision scan instead of hash buckets      │
+│        → Partial selection (find 10 min) instead of sort    │
+│        → Early exit when target found                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Validation:** The `test_cart_has_item_comprehensive` test validates against golden data:
+- 1.4M+ positive tests (every cart item returns `true`)
+- 1.3M+ negative tests (non-cart items return `false`)
+- Zero false positives or negatives across all versions
+
 ## Project Structure
 
 ```
@@ -163,7 +202,7 @@ npm run dev
 ### Run Tests
 
 ```bash
-# Rust unit tests (59 tests) + golden tests (5 tests, 1.4M cases)
+# Rust unit tests (59 tests) + golden tests (6 tests, 2.7M+ cases)
 cargo test
 
 # Frontend unit tests

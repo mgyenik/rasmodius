@@ -152,6 +152,12 @@ fn check_cart_has_item(
     max_price: Option<i32>,
     version: GameVersion,
 ) -> bool {
+    // Fast path: no price constraint, use optimized cart_has_item
+    if max_price.is_none() {
+        return mechanics::cart_has_item(seed, day, item_id, version);
+    }
+
+    // Slow path: need to check price, must get full cart
     let cart = mechanics::get_cart_for_day(seed, day, version);
     for item in cart {
         if item.item_id == item_id {
@@ -159,8 +165,6 @@ fn check_cart_has_item(
                 if item.price <= max {
                     return true;
                 }
-            } else {
-                return true;
             }
         }
     }

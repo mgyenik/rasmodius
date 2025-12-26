@@ -306,6 +306,93 @@ fn test_cart_items_comprehensive() {
     );
 }
 
+/// Validate cart_has_item against get_cart_for_day - no false positives or negatives
+/// For each cart day in golden data:
+/// - Every item returned by get_cart_for_day must return true from cart_has_item
+/// - A sample of items NOT in the cart must return false
+#[test]
+fn test_cart_has_item_comprehensive() {
+    use rasmodius::mechanics::traveling_cart::{cart_has_item, get_cart_for_day};
+
+    let data = load_golden_data();
+    let mut false_negatives: Vec<String> = Vec::new();
+    let mut false_positives: Vec<String> = Vec::new();
+    let mut total_positive_tests = 0;
+    let mut total_negative_tests = 0;
+
+    // Some item IDs to test as negatives (common items that should sometimes NOT be in cart)
+    let negative_test_items: [i32; 10] = [16, 78, 128, 174, 176, 188, 266, 417, 430, 724];
+
+    for seed_data in &data.seeds {
+        let seed = seed_data.seed;
+
+        for version in [
+            GameVersion::V1_3,
+            GameVersion::V1_4,
+            GameVersion::V1_5,
+            GameVersion::V1_6,
+        ] {
+            let version_data = get_version_data(&seed_data.versions, version);
+
+            for test in &version_data.cart {
+                // Get the actual cart items using get_cart_for_day (already validated by other test)
+                let cart = get_cart_for_day(seed, test.day, version);
+                let cart_ids: std::collections::HashSet<i32> =
+                    cart.iter().map(|item| item.item_id).collect();
+
+                // Test positive cases: every item in cart should return true
+                for item in &cart {
+                    total_positive_tests += 1;
+                    if !cart_has_item(seed, test.day, item.item_id, version) {
+                        false_negatives.push(format!(
+                            "FALSE NEGATIVE: seed={} day={} v={:?} item={}: expected true, got false",
+                            seed, test.day, version, item.item_id
+                        ));
+                    }
+                }
+
+                // Test negative cases: items NOT in cart should return false
+                for &item_id in &negative_test_items {
+                    if !cart_ids.contains(&item_id) {
+                        total_negative_tests += 1;
+                        if cart_has_item(seed, test.day, item_id, version) {
+                            false_positives.push(format!(
+                                "FALSE POSITIVE: seed={} day={} v={:?} item={}: expected false, got true",
+                                seed, test.day, version, item_id
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    let total_failures = false_negatives.len() + false_positives.len();
+    if total_failures > 0 {
+        let mut sample: Vec<String> = Vec::new();
+        sample.extend(false_negatives.iter().take(10).cloned());
+        sample.extend(false_positives.iter().take(10).cloned());
+        panic!(
+            "\n{} false negatives, {} false positives out of {} positive tests and {} negative tests:\n{}{}",
+            false_negatives.len(),
+            false_positives.len(),
+            total_positive_tests,
+            total_negative_tests,
+            sample.join("\n"),
+            if total_failures > 20 {
+                format!("\n... and {} more", total_failures - 20)
+            } else {
+                String::new()
+            }
+        );
+    }
+
+    println!(
+        "cart_has_item: {} positive tests, {} negative tests - all passed",
+        total_positive_tests, total_negative_tests
+    );
+}
+
 // Daily luck and dish of day are version-independent mechanics
 // We test against v1.6 data (all versions should have identical values)
 
