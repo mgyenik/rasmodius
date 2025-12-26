@@ -3,7 +3,13 @@
  *
  * This is a thin wrapper around the WASM search_range() function.
  * All filter evaluation happens in Rust for maximum performance.
+ *
+ * Search is processed in chunks to allow cancellation between WASM calls.
  */
+
+// Chunk size for processing - smaller chunks = more responsive cancellation
+// but slightly more overhead. 200k seeds takes ~100-500ms depending on filter complexity.
+const CHUNK_SIZE = 200_000;
 
 // Message types
 export type WorkerRequest =
@@ -35,6 +41,11 @@ async function init() {
   }
 }
 
+// Yield to event loop - allows cancel messages to be processed between chunks
+function yieldToEventLoop(): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
 // Handle messages from main thread
 self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
   const msg = e.data;
@@ -53,42 +64,71 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
       currentSearchId = msg.id;
       cancelled = false;
 
-      // Track matches sent by this worker - used to enforce soft limit per worker
-      // This is needed because the worker can't receive cancel messages while WASM is running
-      let matchesSent = 0;
-      const workerSoftLimit = msg.maxResults; // Each worker stops at its own limit
+      // Track total progress across all chunks
+      let totalChecked = 0;
+      let totalMatches = 0;
+      const workerSoftLimit = msg.maxResults;
 
       try {
-        // Call WASM search_range with callbacks
-        wasm.search_range(
-          msg.filterJson,
-          msg.startSeed,
-          msg.endSeed,
-          msg.maxResults,
-          msg.version,
-          // on_progress callback - returns false to stop searching
-          (checked: number, found: number): boolean => {
-            self.postMessage({
-              type: 'progress',
-              id: msg.id,
-              checked,
-              found,
-            } as WorkerResponse);
-            return !cancelled;
-          },
-          // on_match callback - returns false to stop searching
-          (seed: number): boolean => {
-            matchesSent++;
-            self.postMessage({
-              type: 'match',
-              id: msg.id,
-              seed,
-            } as WorkerResponse);
-            // Stop if this worker has sent enough matches
-            // Global coordination happens in WorkerPool which will trim to exact maxResults
-            return matchesSent < workerSoftLimit;
+        // Process range in chunks to allow cancellation between WASM calls
+        let chunkStart = msg.startSeed;
+
+        while (chunkStart <= msg.endSeed && !cancelled && totalMatches < workerSoftLimit) {
+          const chunkEnd = Math.min(chunkStart + CHUNK_SIZE - 1, msg.endSeed);
+          const remainingResults = workerSoftLimit - totalMatches;
+
+          // Track matches in this chunk
+          let chunkMatches = 0;
+
+          // Call WASM for this chunk
+          wasm.search_range(
+            msg.filterJson,
+            chunkStart,
+            chunkEnd,
+            remainingResults,
+            msg.version,
+            // on_progress callback
+            (checked: number, found: number): boolean => {
+              self.postMessage({
+                type: 'progress',
+                id: msg.id,
+                checked: totalChecked + checked,
+                found: totalMatches + found,
+              } as WorkerResponse);
+              return true; // Always continue within chunk - we check cancelled between chunks
+            },
+            // on_match callback
+            (seed: number): boolean => {
+              chunkMatches++;
+              self.postMessage({
+                type: 'match',
+                id: msg.id,
+                seed,
+              } as WorkerResponse);
+              return chunkMatches < remainingResults;
+            }
+          );
+
+          // Update totals
+          totalChecked += (chunkEnd - chunkStart + 1);
+          totalMatches += chunkMatches;
+
+          // Move to next chunk
+          chunkStart = chunkEnd + 1;
+
+          // Yield to event loop between chunks - this allows cancel messages to be processed
+          if (chunkStart <= msg.endSeed && !cancelled && totalMatches < workerSoftLimit) {
+            await yieldToEventLoop();
           }
-        );
+        }
+
+        // Send final progress
+        self.postMessage({
+          type: 'progress',
+          id: msg.id,
+          checked: totalChecked,
+          found: totalMatches,
+        } as WorkerResponse);
 
         self.postMessage({ type: 'complete', id: msg.id } as WorkerResponse);
       } catch (err) {
