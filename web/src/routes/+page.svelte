@@ -33,7 +33,7 @@
 
 	// Search settings
 	let searchRange = $state<'100k' | '1m' | '10m' | '100m' | 'full'>('1m');
-	let maxResults = $state(100);
+	let maxResults = $state(5);
 
 	// Worker pool
 	let workerPool: WorkerPool | null = null;
@@ -187,7 +187,7 @@
 						searchProgress = progress;
 					},
 					onComplete: (matches) => {
-						searchResults = matches.slice(0, maxResults);
+						searchResults = matches;
 						isSearching = false;
 					},
 					onError: (msg) => {
@@ -556,7 +556,7 @@
 								</select>
 							</div>
 							<div>
-								<label class="block text-sm font-medium text-gray-700 mb-1">Max Results</label>
+								<label class="block text-sm font-medium text-gray-700 mb-1">Stop After</label>
 								<input
 									type="number"
 									bind:value={maxResults}
