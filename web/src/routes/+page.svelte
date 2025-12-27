@@ -37,7 +37,7 @@
 	let explorePanels = $state<ExplorePanel[]>(createDefaultExploreState().panels);
 
 	// Search settings
-	let searchRange = $state<'100k' | '1m' | '10m' | '100m' | 'full'>('1m');
+	let searchRange = $state<'10m' | '100m' | 'full'>('10m');
 	let maxResults = $state(5);
 
 	// Worker pool
@@ -48,8 +48,6 @@
 	let wasm: typeof import('rasmodius') | null = $state(null);
 
 	const SEARCH_RANGES: Record<string, { start: number; end: number; label: string }> = {
-		'100k': { start: 0, end: 99999, label: '100K seeds' },
-		'1m': { start: 0, end: 999999, label: '1M seeds' },
 		'10m': { start: 0, end: 9999999, label: '10M seeds' },
 		'100m': { start: 0, end: 99999999, label: '100M seeds' },
 		'full': { start: 0, end: 2147483647, label: 'Full range (2.1B)' },
