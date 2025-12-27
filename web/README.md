@@ -31,7 +31,9 @@ npm run test:e2e   # E2E tests (Playwright)
 | `src/lib/workers/WorkerPool.ts` | Coordinates parallel search workers |
 | `src/lib/workers/search.worker.ts` | Thin WASM wrapper (~100 lines) |
 | `src/lib/utils/filterToJson.ts` | Converts UI filters to WASM JSON format |
+| `src/lib/utils/urlNavigation.ts` | URL state management for undo/redo |
 | `src/lib/components/filter-builder/` | Filter UI components |
+| `src/lib/components/explore/` | Dynamic explore panel components |
 
 ## Architecture
 

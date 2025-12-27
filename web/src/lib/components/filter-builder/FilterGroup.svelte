@@ -4,9 +4,14 @@
 	import FilterConditionEditor from './FilterConditionEditor.svelte';
 	import FilterGroupComponent from './FilterGroup.svelte';
 
-	let { group = $bindable(), isRoot = false }: {
+	let {
+		group = $bindable(),
+		isRoot = false,
+		onMeaningfulChange
+	}: {
 		group: FilterGroup;
 		isRoot?: boolean;
+		onMeaningfulChange?: () => void;
 	} = $props();
 
 	function toggleLogic() {
@@ -15,6 +20,7 @@
 
 	function removeCondition(index: number) {
 		group.conditions = group.conditions.filter((_, i) => i !== index);
+		onMeaningfulChange?.();
 	}
 
 	function addSubgroup() {
@@ -24,6 +30,7 @@
 			conditions: [],
 		};
 		group.conditions = [...group.conditions, newGroup];
+		onMeaningfulChange?.();
 	}
 
 	function isGroup(item: FilterCondition | FilterGroup): item is FilterGroup {
@@ -65,7 +72,7 @@
 						{#if isGroup(item)}
 							<!-- Nested Group - use array indexing for binding -->
 							<div class="border-l-4 border-gray-300 pl-3">
-								<FilterGroupComponent bind:group={group.conditions[index]} isRoot={false} />
+								<FilterGroupComponent bind:group={group.conditions[index]} isRoot={false} {onMeaningfulChange} />
 							</div>
 						{:else}
 							<!-- Condition - use array indexing for binding -->

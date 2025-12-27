@@ -254,3 +254,56 @@ test.describe('URL Parameters', () => {
     await expect(page.getByRole('button', { name: 'Share Filter' })).toBeVisible();
   });
 });
+
+test.describe('Browser Navigation Undo/Redo', () => {
+  test('back button undoes adding a filter condition', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
+
+    // Add a filter condition
+    await page.getByRole('button', { name: '+ Daily Luck' }).click();
+    await expect(page.locator('span.font-medium:has-text("Daily Luck")')).toBeVisible();
+
+    // URL should have the filter parameter
+    await expect(page).toHaveURL(/f=/);
+
+    // Go back
+    await page.goBack();
+
+    // Filter should be removed
+    await expect(page.locator('span.font-medium:has-text("Daily Luck")')).not.toBeVisible();
+
+    // URL should not have the filter parameter
+    await expect(page).not.toHaveURL(/f=/);
+  });
+
+  test('forward button redoes after back', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
+
+    // Add a filter condition
+    await page.getByRole('button', { name: '+ Cart Item' }).click();
+    await expect(page.locator('span.font-medium:has-text("Cart")')).toBeVisible();
+
+    // Go back to undo
+    await page.goBack();
+    await expect(page.locator('span.font-medium:has-text("Cart")')).not.toBeVisible();
+
+    // Go forward to redo
+    await page.goForward();
+    await expect(page.locator('span.font-medium:has-text("Cart")')).toBeVisible();
+  });
+
+  test('back button restores previous tab', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
+
+    // Switch to Explore tab
+    await page.getByRole('button', { name: 'Explore Seed' }).click();
+    await expect(page.getByText('Daily Luck')).toBeVisible();
+
+    // Go back - should return to Search tab
+    await page.goBack();
+    await expect(page.getByText('Filter Builder')).toBeVisible();
+  });
+});

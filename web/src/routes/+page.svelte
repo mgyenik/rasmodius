@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { page } from '$app/state';
 	import { FilterBuilder } from '$lib/components/filter-builder';
 	import ExploreView from '$lib/components/explore/ExploreView.svelte';
 	import type { FilterRoot } from '$lib/types/filters';
@@ -13,12 +14,10 @@
 		getSeedFromURL,
 		getVersionFromURL,
 		getShareableURL,
-		updateURLWithFilter,
-		updateURLWithVersion,
 		getExploreFromURL,
-		updateURLWithExplore,
 		getShareableExploreURL
 	} from '$lib/utils/urlSerializer';
+	import { pushURLState, replaceURLState } from '$lib/utils/urlNavigation';
 
 	let wasmLoaded = $state(false);
 	let seed = $state(12345);
@@ -154,16 +153,47 @@
 		isSearching = false;
 	}
 
+	// Track if we're restoring state from URL (to avoid pushing during restore)
+	let isRestoringFromURL = false;
+
+	// Debounce timer for seed changes
+	let seedDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 	function onVersionChange() {
-		updateURLWithVersion(gameVersion);
+		replaceURLState({ version: gameVersion });
 	}
 
-	// Auto-update URL when filter changes (enables back button undo)
-	$effect(() => {
-		// Access filter to trigger on any change
-		JSON.stringify(filter);
-		updateURLWithFilter(filter);
-	});
+	// Called when FilterBuilder makes a meaningful change (add/remove condition, example, clear)
+	function onFilterMeaningfulChange() {
+		if (isRestoringFromURL) return;
+		pushURLState({ filter, activeTab });
+	}
+
+	// Called when seed changes - debounced
+	function onSeedChange() {
+		if (isRestoringFromURL) return;
+		if (seedDebounceTimer) clearTimeout(seedDebounceTimer);
+		seedDebounceTimer = setTimeout(() => {
+			pushURLState({ panels: explorePanels, seed, activeTab });
+		}, 500);
+	}
+
+	// Handle tab switching
+	function switchToSearch() {
+		if (activeTab === 'search') return;
+		activeTab = 'search';
+		if (!isRestoringFromURL) {
+			pushURLState({ filter, activeTab });
+		}
+	}
+
+	function switchToExplore() {
+		if (activeTab === 'explore') return;
+		activeTab = 'explore';
+		if (!isRestoringFromURL) {
+			pushURLState({ panels: explorePanels, seed, activeTab });
+		}
+	}
 
 	async function copyFilterLink() {
 		const url = getShareableURL(filter);
@@ -203,15 +233,76 @@
 			explorePanels = panels;
 		}
 		activeTab = 'explore';
-		updateURLWithExplore(explorePanels, seed);
+		pushURLState({ panels: explorePanels, seed, activeTab });
 	}
 
-	// Update URL when explore panels change
+	// Explore panel handlers - called from ExploreView
+	function handlePanelAdd(panel: ExplorePanel) {
+		explorePanels = [...explorePanels, panel];
+		if (!isRestoringFromURL) {
+			pushURLState({ panels: explorePanels, seed, activeTab });
+		}
+	}
+
+	function handlePanelRemove(panelId: string) {
+		explorePanels = explorePanels.filter((p) => p.id !== panelId);
+		if (!isRestoringFromURL) {
+			pushURLState({ panels: explorePanels, seed, activeTab });
+		}
+	}
+
+	function handlePanelUpdate(updated: ExplorePanel) {
+		explorePanels = explorePanels.map((p) => (p.id === updated.id ? updated : p));
+		if (!isRestoringFromURL) {
+			pushURLState({ panels: explorePanels, seed, activeTab });
+		}
+	}
+
+	// Track whether we've made any navigation (to distinguish initial load from back to start)
+	let hasNavigated = $state(false);
+
+	// Derive page state reactively
+	const pageState = $derived(page.state as {
+		filter?: FilterRoot;
+		panels?: ExplorePanel[];
+		seed?: number;
+		version?: '1.3' | '1.4' | '1.5' | '1.6';
+		activeTab?: 'search' | 'explore';
+	});
+
+	// Watch for page.state changes (back/forward navigation)
+	// SvelteKit restores page.state automatically on history navigation
 	$effect(() => {
-		// Access panels to trigger on any change
-		JSON.stringify(explorePanels);
-		if (activeTab === 'explore') {
-			updateURLWithExplore(explorePanels, seed);
+		const hasState = pageState && Object.keys(pageState).length > 0;
+
+		// If there's state, restore it (this happens on back/forward)
+		if (hasState) {
+			isRestoringFromURL = true;
+			hasNavigated = true;
+
+			if (pageState.filter !== undefined) {
+				filter = pageState.filter;
+			}
+			if (pageState.panels !== undefined) {
+				explorePanels = pageState.panels;
+			}
+			if (pageState.seed !== undefined) {
+				seed = pageState.seed;
+			}
+			if (pageState.version !== undefined) {
+				gameVersion = pageState.version;
+			}
+			if (pageState.activeTab !== undefined) {
+				activeTab = pageState.activeTab;
+			}
+
+			isRestoringFromURL = false;
+		} else if (hasNavigated) {
+			// Back to initial state (empty) - reset to defaults
+			isRestoringFromURL = true;
+			filter = createEmptyFilter();
+			activeTab = 'search';
+			isRestoringFromURL = false;
 		}
 	});
 </script>
@@ -247,7 +338,7 @@
 			<!-- Tab Navigation -->
 			<div class="flex gap-2 mb-6">
 				<button
-					onclick={() => activeTab = 'search'}
+					onclick={switchToSearch}
 					class="px-4 py-2 rounded-t-lg font-medium transition-colors {activeTab === 'search'
 						? 'bg-white text-amber-800 shadow-md'
 						: 'bg-amber-100 text-amber-600 hover:bg-amber-200'}"
@@ -258,7 +349,7 @@
 					{/if}
 				</button>
 				<button
-					onclick={() => activeTab = 'explore'}
+					onclick={switchToExplore}
 					class="px-4 py-2 rounded-t-lg font-medium transition-colors {activeTab === 'explore'
 						? 'bg-white text-amber-800 shadow-md'
 						: 'bg-amber-100 text-amber-600 hover:bg-amber-200'}"
@@ -277,6 +368,10 @@
 						{wasm}
 						onCopyLink={copySeedLink}
 						{copySuccess}
+						onAddPanel={handlePanelAdd}
+						onRemovePanel={handlePanelRemove}
+						onUpdatePanel={handlePanelUpdate}
+						onSeedChange={onSeedChange}
 					/>
 				</div>
 			{:else}
@@ -293,7 +388,7 @@
 							</button>
 						{/if}
 					</div>
-					<FilterBuilder bind:filter onSearch={handleSearch} />
+					<FilterBuilder bind:filter onSearch={handleSearch} onMeaningfulChange={onFilterMeaningfulChange} />
 
 					<!-- Search Options -->
 					<div class="mt-6 pt-4 border-t border-gray-200">

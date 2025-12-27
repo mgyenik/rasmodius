@@ -10,6 +10,27 @@ A high-performance Stardew Valley seed finder for speedrunners and challenge pla
 - **Explore** - Dynamic panels show predictions for any seed: daily luck, weather forecasts, cart inventories, geode contents, mine floors
 - **Filter → Explore** - Click a search result to auto-generate explore panels based on your filter criteria
 - **Shareable URLs** - Both search filters and explore state are encoded in the URL for easy sharing
+- **Undo/Redo** - Browser back/forward buttons work as undo/redo for your actions
+
+### Browser Navigation as Undo/Redo
+
+The browser's back and forward buttons function as undo/redo for meaningful actions:
+
+**Creates undo point (Back reverses it):**
+- Add or remove a filter condition
+- Load an example filter
+- Add or remove an explore panel
+- Save a panel edit
+- Click a search result to explore
+- Switch between Search and Explore tabs
+- Change seed value (after typing stops)
+
+**No undo point (intermediate states):**
+- Typing in filter inputs (luck values, item search, day ranges)
+- Editing a panel before clicking Save
+- Changing game version
+
+*Technical note:* Uses SvelteKit's shallow routing (`pushState` from `$app/navigation`) with state stored in `page.state`. Svelte 5's reactive proxies must be cloned via `JSON.parse(JSON.stringify(...))` before passing to the History API.
 
 ## Credits
 
@@ -209,7 +230,7 @@ rasmodius/
     │   │   │       └── panels/      # Individual panel types
     │   │   ├── workers/        # WorkerPool + search.worker
     │   │   ├── types/          # TypeScript types (filters, explorePanels)
-    │   │   └── utils/          # filterToPanels, urlSerializer
+    │   │   └── utils/          # filterToPanels, urlSerializer, urlNavigation
     │   └── routes/
     │       └── +page.svelte
     └── e2e/                    # Playwright tests

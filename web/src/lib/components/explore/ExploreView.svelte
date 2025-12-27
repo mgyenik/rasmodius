@@ -19,7 +19,11 @@
 		version,
 		wasm,
 		onCopyLink,
-		copySuccess = false
+		copySuccess = false,
+		onAddPanel,
+		onRemovePanel,
+		onUpdatePanel,
+		onSeedChange
 	}: {
 		seed: number;
 		panels: ExplorePanel[];
@@ -27,18 +31,30 @@
 		wasm: WasmModule | null;
 		onCopyLink?: () => void;
 		copySuccess?: boolean;
+		onAddPanel?: (panel: ExplorePanel) => void;
+		onRemovePanel?: (panelId: string) => void;
+		onUpdatePanel?: (updated: ExplorePanel) => void;
+		onSeedChange?: () => void;
 	} = $props();
 
 	function handleRemovePanel(panelId: string) {
-		panels = panels.filter((p) => p.id !== panelId);
+		// Call parent callback which handles both state update and URL push
+		onRemovePanel?.(panelId);
 	}
 
 	function handleUpdatePanel(updated: ExplorePanel) {
-		panels = panels.map((p) => (p.id === updated.id ? updated : p));
+		// Call parent callback which handles both state update and URL push
+		onUpdatePanel?.(updated);
 	}
 
 	function handleAddPanel(panel: ExplorePanel) {
-		panels = [...panels, panel];
+		// Call parent callback which handles both state update and URL push
+		onAddPanel?.(panel);
+	}
+
+	function handleSeedInput() {
+		// Notify parent of seed change for debounced URL update
+		onSeedChange?.();
 	}
 </script>
 
@@ -51,6 +67,7 @@
 				id="explore-seed"
 				type="number"
 				bind:value={seed}
+				oninput={handleSeedInput}
 				class="w-32 px-2 py-1 border border-gray-300 rounded text-sm"
 			/>
 		</div>

@@ -3,14 +3,20 @@
 	import { createEmptyFilter, generateId, FILTER_EXAMPLES } from '$lib/types/filters';
 	import FilterGroup from './FilterGroup.svelte';
 
-	let { filter = $bindable(createEmptyFilter()), onSearch }: {
+	let {
+		filter = $bindable(createEmptyFilter()),
+		onSearch,
+		onMeaningfulChange
+	}: {
 		filter?: FilterRoot;
 		onSearch?: (filter: FilterRoot) => void;
+		onMeaningfulChange?: () => void;
 	} = $props();
 
 	function addCondition(type: FilterCondition['type']) {
 		const newCondition = createDefaultCondition(type);
 		filter.conditions = [...filter.conditions, newCondition];
+		onMeaningfulChange?.();
 	}
 
 	function createDefaultCondition(type: FilterCondition['type']): FilterCondition {
@@ -67,11 +73,13 @@
 		const example = FILTER_EXAMPLES[index];
 		if (example) {
 			filter = { ...example.filter, id: generateId() };
+			onMeaningfulChange?.();
 		}
 	}
 
 	function clearFilter() {
 		filter = createEmptyFilter();
+		onMeaningfulChange?.();
 	}
 
 	function handleSearch() {
@@ -96,7 +104,7 @@
 
 	<!-- Filter Tree -->
 	<div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
-		<FilterGroup bind:group={filter} isRoot={true} />
+		<FilterGroup bind:group={filter} isRoot={true} {onMeaningfulChange} />
 	</div>
 
 	<!-- Add Condition Buttons -->
