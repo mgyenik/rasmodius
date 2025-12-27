@@ -8,9 +8,25 @@
  */
 
 import type { FilterRoot, FilterCondition, FilterGroup, DaySpec } from '$lib/types/filters';
+import { getDaysFromSpec } from '$lib/types/filters';
 import {
   type ExplorePanel,
   type DayRange,
+  type CartPanel,
+  type NightEventsPanel,
+  type DailyLuckPanel,
+  type WeatherPanel,
+  type GeodesPanel,
+  type MineFloorsPanel,
+  type DishPanel,
+  type CartHighlight,
+  type NightEventHighlight,
+  type LuckHighlight,
+  type WeatherHighlight,
+  type GeodeHighlight,
+  type MineFloorHighlight,
+  type DishHighlight,
+  generatePanelId,
   createCartPanel,
   createNightEventsPanel,
   createDailyLuckPanel,
@@ -104,6 +120,117 @@ function mergeRanges(ranges: DayRange[]): DayRange[] {
 }
 
 // ============================================================================
+// Highlight Criteria Extraction
+// ============================================================================
+
+/** Extract cart item highlights from conditions */
+function extractCartHighlights(conditions: FilterCondition[]): CartHighlight[] {
+  return conditions
+    .filter((c): c is FilterCondition & { type: 'cart_item' } => c.type === 'cart_item')
+    .map((c) => ({
+      itemId: c.itemId,
+      maxPrice: c.maxPrice,
+      days: getDaysFromSpec(c.daySpec),
+    }));
+}
+
+/** Extract night event highlights from conditions */
+function extractNightEventHighlights(conditions: FilterCondition[]): NightEventHighlight[] {
+  return conditions
+    .filter((c): c is FilterCondition & { type: 'night_event' } => c.type === 'night_event')
+    .map((c) => ({
+      eventType: c.eventType,
+      days: getDaysFromSpec(c.daySpec),
+    }));
+}
+
+/** Extract luck highlights from conditions */
+function extractLuckHighlights(conditions: FilterCondition[]): LuckHighlight[] {
+  return conditions
+    .filter((c): c is FilterCondition & { type: 'daily_luck' } => c.type === 'daily_luck')
+    .map((c) => ({
+      minLuck: c.minLuck,
+      maxLuck: c.maxLuck,
+      days: getDaysFromSpec(c.daySpec),
+    }));
+}
+
+/** Extract weather highlights from conditions */
+function extractWeatherHighlights(conditions: FilterCondition[]): WeatherHighlight[] {
+  return conditions
+    .filter((c): c is FilterCondition & { type: 'weather' } => c.type === 'weather')
+    .map((c) => ({
+      weatherType: c.weatherType,
+      days: getDaysFromSpec(c.daySpec),
+    }));
+}
+
+/** Extract geode highlights from conditions for a specific geode type */
+function extractGeodeHighlights(
+  conditions: FilterCondition[],
+  geodeType: string
+): GeodeHighlight[] {
+  const geodeConditions = conditions.filter(
+    (c): c is FilterCondition & { type: 'geode' } =>
+      c.type === 'geode' && c.geodeType === geodeType
+  );
+
+  if (geodeConditions.length === 0) return [];
+
+  // Collect all geode numbers and target items for this type
+  const geodeNumbers: number[] = [];
+  const targetItems: number[] = [];
+
+  for (const c of geodeConditions) {
+    if (!geodeNumbers.includes(c.geodeNumber)) {
+      geodeNumbers.push(c.geodeNumber);
+    }
+    for (const item of c.targetItems) {
+      if (!targetItems.includes(item)) {
+        targetItems.push(item);
+      }
+    }
+  }
+
+  return [{ geodeNumbers, targetItems }];
+}
+
+/** Extract mine floor highlights from conditions */
+function extractMineFloorHighlights(conditions: FilterCondition[]): MineFloorHighlight[] {
+  const mineConditions = conditions.filter(
+    (c): c is FilterCondition & { type: 'mine_floor' } => c.type === 'mine_floor'
+  );
+
+  if (mineConditions.length === 0) return [];
+
+  // Collect floors that should be highlighted (mushroom floors when hasMushroom is set)
+  const highlights: MineFloorHighlight[] = [];
+
+  for (const c of mineConditions) {
+    if (c.hasMushroom) {
+      // Highlight floors in the filter's floor range that have mushrooms
+      const floors: number[] = [];
+      for (let f = c.floorRange.start; f <= c.floorRange.end; f++) {
+        floors.push(f);
+      }
+      highlights.push({ floors, hasMushroom: true });
+    }
+  }
+
+  return highlights;
+}
+
+/** Extract dish highlights from conditions */
+function extractDishHighlights(conditions: FilterCondition[]): DishHighlight[] {
+  return conditions
+    .filter((c): c is FilterCondition & { type: 'dish_of_day' } => c.type === 'dish_of_day')
+    .map((c) => ({
+      dishId: c.dishId,
+      days: getDaysFromSpec(c.daySpec),
+    }));
+}
+
+// ============================================================================
 // Main Conversion Function
 // ============================================================================
 
@@ -111,7 +238,8 @@ function mergeRanges(ranges: DayRange[]): DayRange[] {
  * Convert a filter to explore panels
  *
  * Creates one panel per unique condition type, with ranges merged
- * from all conditions of that type.
+ * from all conditions of that type. Also attaches highlight criteria
+ * so panels can visually emphasize matched items.
  */
 export function filterToPanels(filter: FilterRoot): ExplorePanel[] {
   const conditions = flattenConditions(filter);
@@ -133,6 +261,7 @@ export function filterToPanels(filter: FilterRoot): ExplorePanel[] {
   const mineConditions: Array<{
     daySpec: DaySpec;
     floorRange: { start: number; end: number };
+    hasMushroom?: boolean;
   }> = [];
 
   for (const condition of conditions) {
@@ -162,6 +291,7 @@ export function filterToPanels(filter: FilterRoot): ExplorePanel[] {
         mineConditions.push({
           daySpec: condition.daySpec,
           floorRange: condition.floorRange,
+          hasMushroom: condition.hasMushroom,
         });
         break;
     }
@@ -169,35 +299,73 @@ export function filterToPanels(filter: FilterRoot): ExplorePanel[] {
 
   const panels: ExplorePanel[] = [];
 
+  // Extract highlight criteria
+  const cartHighlights = extractCartHighlights(conditions);
+  const nightEventHighlights = extractNightEventHighlights(conditions);
+  const luckHighlights = extractLuckHighlights(conditions);
+  const weatherHighlights = extractWeatherHighlights(conditions);
+  const dishHighlights = extractDishHighlights(conditions);
+  const mineFloorHighlights = extractMineFloorHighlights(conditions);
+
   // Create panels for day-based conditions
   // Each non-overlapping range group gets its own panel
   if (cartRanges.length > 0) {
     for (const range of mergeRanges(cartRanges)) {
-      panels.push(createCartPanel(range));
+      const panel: CartPanel = {
+        type: 'cart',
+        id: generatePanelId(),
+        dayRange: range,
+        highlights: cartHighlights.length > 0 ? cartHighlights : undefined,
+      };
+      panels.push(panel);
     }
   }
 
   if (nightEventRanges.length > 0) {
     for (const range of mergeRanges(nightEventRanges)) {
-      panels.push(createNightEventsPanel(range));
+      const panel: NightEventsPanel = {
+        type: 'night_events',
+        id: generatePanelId(),
+        dayRange: range,
+        highlights: nightEventHighlights.length > 0 ? nightEventHighlights : undefined,
+      };
+      panels.push(panel);
     }
   }
 
   if (luckRanges.length > 0) {
     for (const range of mergeRanges(luckRanges)) {
-      panels.push(createDailyLuckPanel(range));
+      const panel: DailyLuckPanel = {
+        type: 'daily_luck',
+        id: generatePanelId(),
+        dayRange: range,
+        highlights: luckHighlights.length > 0 ? luckHighlights : undefined,
+      };
+      panels.push(panel);
     }
   }
 
   if (weatherRanges.length > 0) {
     for (const range of mergeRanges(weatherRanges)) {
-      panels.push(createWeatherPanel(range));
+      const panel: WeatherPanel = {
+        type: 'weather',
+        id: generatePanelId(),
+        dayRange: range,
+        highlights: weatherHighlights.length > 0 ? weatherHighlights : undefined,
+      };
+      panels.push(panel);
     }
   }
 
   if (dishRanges.length > 0) {
     for (const range of mergeRanges(dishRanges)) {
-      panels.push(createDishPanel(range));
+      const panel: DishPanel = {
+        type: 'dish',
+        id: generatePanelId(),
+        dayRange: range,
+        highlights: dishHighlights.length > 0 ? dishHighlights : undefined,
+      };
+      panels.push(panel);
     }
   }
 
@@ -212,12 +380,15 @@ export function filterToPanels(filter: FilterRoot): ExplorePanel[] {
   for (const [geodeType, numbers] of geodesByType) {
     const min = Math.min(...numbers);
     const max = Math.max(...numbers);
-    panels.push(
-      createGeodesPanel(
-        geodeType as 'geode' | 'frozen' | 'magma' | 'omni' | 'trove' | 'coconut',
-        { start: min, end: max }
-      )
-    );
+    const geodeHighlights = extractGeodeHighlights(conditions, geodeType);
+    const panel: GeodesPanel = {
+      type: 'geodes',
+      id: generatePanelId(),
+      geodeType: geodeType as 'geode' | 'frozen' | 'magma' | 'omni' | 'trove' | 'coconut',
+      geodeRange: { start: min, end: max },
+      highlights: geodeHighlights.length > 0 ? geodeHighlights : undefined,
+    };
+    panels.push(panel);
   }
 
   // Create mine panels - use first day found
@@ -230,7 +401,14 @@ export function filterToPanels(filter: FilterRoot): ExplorePanel[] {
       start: Math.min(...allFloorRanges.map((f) => f.start)),
       end: Math.max(...allFloorRanges.map((f) => f.end)),
     };
-    panels.push(createMineFloorsPanel(dayRange.start, mergedFloors));
+    const panel: MineFloorsPanel = {
+      type: 'mine_floors',
+      id: generatePanelId(),
+      day: dayRange.start,
+      floorRange: mergedFloors,
+      highlights: mineFloorHighlights.length > 0 ? mineFloorHighlights : undefined,
+    };
+    panels.push(panel);
   }
 
   return panels;

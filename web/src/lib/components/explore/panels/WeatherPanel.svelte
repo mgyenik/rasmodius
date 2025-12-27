@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { WeatherPanel } from '$lib/types/explorePanels';
+	import type { WeatherPanel, WeatherHighlight } from '$lib/types/explorePanels';
 
 	type WeatherData = { day: number; weather: string };
 	type WasmModule = {
@@ -22,6 +22,28 @@
 		if (!wasm) return [];
 		return wasm.predict_weather_range(seed, panel.dayRange.start, panel.dayRange.end, version);
 	});
+
+	/** Map internal weather types to filter weather types */
+	function normalizeWeatherType(weather: string): string {
+		// The filter uses 'storm' but WASM returns 'lightning'
+		if (weather === 'lightning') return 'storm';
+		// The filter uses 'windy' but WASM returns 'debris'
+		if (weather === 'debris') return 'windy';
+		return weather;
+	}
+
+	/** Check if a weather value matches any of the highlight criteria */
+	function isHighlighted(weather: string, day: number): boolean {
+		if (!panel.highlights) return false;
+		const normalizedWeather = normalizeWeatherType(weather);
+		return panel.highlights.some((h: WeatherHighlight) => {
+			// Check day constraint
+			if (!h.days.includes(day)) return false;
+			// Check weather type (any matches all)
+			if (h.weatherType !== 'any' && h.weatherType !== normalizedWeather) return false;
+			return true;
+		});
+	}
 
 	function getWeatherIcon(weather: string): string {
 		switch (weather) {
@@ -64,9 +86,11 @@
 
 <div class="grid grid-cols-7 gap-1 text-xs">
 	{#each weatherData as { day, weather }}
+		{@const highlighted = isHighlighted(weather, day)}
 		<div
-			class="rounded px-1 py-0.5 text-center {getWeatherClass(weather)}"
-			title="Day {day}: {weather}"
+			class="rounded px-1 py-0.5 text-center transition-all {getWeatherClass(weather)}
+				{highlighted ? 'ring-2 ring-emerald-400 ring-offset-1 shadow-md' : ''}"
+			title="Day {day}: {weather}{highlighted ? ' (matches filter)' : ''}"
 		>
 			<span class="font-medium">{day}</span>
 			<span class="block text-sm">{getWeatherIcon(weather)}</span>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { MineFloorsPanel } from '$lib/types/explorePanels';
+	import type { MineFloorsPanel, MineFloorHighlight } from '$lib/types/explorePanels';
 
 	type FloorPrediction = {
 		floor: number;
@@ -49,6 +49,18 @@
 		return groups;
 	});
 
+	/** Check if a floor matches any of the highlight criteria */
+	function isHighlighted(floor: FloorPrediction): boolean {
+		if (!panel.highlights) return false;
+		return panel.highlights.some((h: MineFloorHighlight) => {
+			// Check if this floor is in the target list
+			if (!h.floors.includes(floor.floor)) return false;
+			// Check mushroom criteria
+			if (h.hasMushroom && floor.is_mushroom_floor) return true;
+			return false;
+		});
+	}
+
 	function getFloorClass(floor: FloorPrediction): string {
 		if (floor.is_mushroom_floor) return 'bg-amber-100 text-amber-800';
 		if (floor.is_monster_floor) return 'bg-red-100 text-red-800';
@@ -76,9 +88,11 @@
 	{#each floorGroups as group}
 		<div class="flex gap-0.5">
 			{#each group as floor}
+				{@const highlighted = isHighlighted(floor)}
 				<div
-					class="w-7 h-7 flex items-center justify-center rounded text-xs font-medium {getFloorClass(floor)}"
-					title={getFloorTitle(floor)}
+					class="w-7 h-7 flex items-center justify-center rounded text-xs font-medium transition-all {getFloorClass(floor)}
+						{highlighted ? 'ring-2 ring-emerald-400 ring-offset-1 shadow-md' : ''}"
+					title="{getFloorTitle(floor)}{highlighted ? ' (matches filter)' : ''}"
 				>
 					{#if getFloorIcon(floor)}
 						<span class="text-sm">{getFloorIcon(floor)}</span>

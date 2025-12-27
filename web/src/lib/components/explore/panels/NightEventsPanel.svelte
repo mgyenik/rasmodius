@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { NightEventsPanel } from '$lib/types/explorePanels';
+	import type { NightEventsPanel, NightEventHighlight } from '$lib/types/explorePanels';
 
 	type EventData = { day: number; event: string };
 	type WasmModule = {
@@ -30,6 +30,18 @@
 
 	// Only show days with actual events
 	let eventsWithContent = $derived(eventsData.filter((e) => e.event !== 'none'));
+
+	/** Check if an event matches any of the highlight criteria */
+	function isHighlighted(event: string, day: number): boolean {
+		if (!panel.highlights) return false;
+		return panel.highlights.some((h: NightEventHighlight) => {
+			// Check day constraint
+			if (!h.days.includes(day)) return false;
+			// Check event type (any matches all events)
+			if (h.eventType !== 'any' && h.eventType !== event) return false;
+			return true;
+		});
+	}
 
 	function getEventIcon(event: string): string {
 		switch (event) {
@@ -94,7 +106,12 @@
 {:else}
 	<div class="flex flex-wrap gap-2 text-sm">
 		{#each eventsWithContent as { day, event }}
-			<div class="rounded-lg px-2 py-1 {getEventClass(event)}" title={getEventLabel(event)}>
+			{@const highlighted = isHighlighted(event, day)}
+			<div
+				class="rounded-lg px-2 py-1 transition-all {getEventClass(event)}
+					{highlighted ? 'ring-2 ring-emerald-400 ring-offset-1 shadow-md' : ''}"
+				title="{getEventLabel(event)}{highlighted ? ' (matches filter)' : ''}"
+			>
 				<span class="mr-1">{getEventIcon(event)}</span>
 				<span class="font-medium">Day {day}</span>
 				<span class="text-xs ml-1 opacity-75">{getEventLabel(event)}</span>

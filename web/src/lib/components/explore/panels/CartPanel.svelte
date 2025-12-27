@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { CartPanel } from '$lib/types/explorePanels';
+	import type { CartPanel, CartHighlight } from '$lib/types/explorePanels';
 	import { getItemName } from '$lib/data/items';
 
 	type CartItem = { id: number; price: number; quantity: number };
@@ -33,6 +33,20 @@
 		const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 		return days[(day - 1) % 7];
 	}
+
+	/** Check if an item matches any of the highlight criteria for a given day */
+	function isHighlighted(item: CartItem, day: number): boolean {
+		if (!panel.highlights) return false;
+		return panel.highlights.some((h: CartHighlight) => {
+			// Check if this item matches the highlight criteria
+			if (h.itemId !== item.id) return false;
+			// Check day constraint
+			if (!h.days.includes(day)) return false;
+			// Check price constraint if specified
+			if (h.maxPrice !== undefined && item.price > h.maxPrice) return false;
+			return true;
+		});
+	}
 </script>
 
 {#if cartData.length === 0}
@@ -46,12 +60,16 @@
 				</div>
 				<div class="flex flex-wrap gap-1">
 					{#each items as item}
+						{@const highlighted = isHighlighted(item, day)}
 						<span
-							class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-amber-50 text-amber-800"
-							title="{getItemName(item.id)} - {formatPrice(item.price)}{item.quantity > 1 ? ` x${item.quantity}` : ''}"
+							class="inline-flex items-center px-1.5 py-0.5 rounded text-xs transition-all
+								{highlighted
+									? 'bg-emerald-100 text-emerald-900 ring-2 ring-emerald-400 ring-offset-1 font-semibold shadow-sm'
+									: 'bg-amber-50 text-amber-800'}"
+							title="{getItemName(item.id)} - {formatPrice(item.price)}{item.quantity > 1 ? ` x${item.quantity}` : ''}{highlighted ? ' (matches filter)' : ''}"
 						>
 							<span class="font-medium truncate max-w-[120px]">{getItemName(item.id)}</span>
-							<span class="ml-1 text-amber-600">{formatPrice(item.price)}</span>
+							<span class="ml-1 {highlighted ? 'text-emerald-700' : 'text-amber-600'}">{formatPrice(item.price)}</span>
 						</span>
 					{/each}
 				</div>

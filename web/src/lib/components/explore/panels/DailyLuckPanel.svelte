@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { DailyLuckPanel } from '$lib/types/explorePanels';
+	import type { DailyLuckPanel, LuckHighlight } from '$lib/types/explorePanels';
 
 	type LuckData = { day: number; luck: number };
 	type WasmModule = { predict_luck_range: (seed: number, start: number, end: number) => LuckData[] };
@@ -31,11 +31,29 @@
 		const pct = (luck * 100).toFixed(1);
 		return luck >= 0 ? `+${pct}%` : `${pct}%`;
 	}
+
+	/** Check if a luck value matches any of the highlight criteria */
+	function isHighlighted(luck: number, day: number): boolean {
+		if (!panel.highlights) return false;
+		return panel.highlights.some((h: LuckHighlight) => {
+			// Check day constraint
+			if (!h.days.includes(day)) return false;
+			// Check luck range
+			if (h.minLuck !== undefined && luck < h.minLuck) return false;
+			if (h.maxLuck !== undefined && luck > h.maxLuck) return false;
+			return true;
+		});
+	}
 </script>
 
 <div class="grid grid-cols-7 gap-1 text-xs">
 	{#each luckData as { day, luck }}
-		<div class="rounded px-1 py-0.5 text-center {getLuckColor(luck)}" title="Day {day}">
+		{@const highlighted = isHighlighted(luck, day)}
+		<div
+			class="rounded px-1 py-0.5 text-center transition-all {getLuckColor(luck)}
+				{highlighted ? 'ring-2 ring-emerald-400 ring-offset-1 shadow-md' : ''}"
+			title="Day {day}{highlighted ? ' (matches filter)' : ''}"
+		>
 			<span class="font-medium">{day}</span>
 			<span class="block text-[10px]">{formatLuck(luck)}</span>
 		</div>

@@ -25,6 +25,56 @@ export type FloorRange = {
 };
 
 // ============================================================================
+// Highlight Criteria Types
+// ============================================================================
+// Note: Use arrays instead of Sets for JSON serialization compatibility
+// (history state cloning uses JSON.parse(JSON.stringify(...)))
+
+/** Highlight cart items matching specific item IDs (optionally with price constraints) */
+export type CartHighlight = {
+  itemId: number;
+  maxPrice?: number;
+  days: number[]; // Days to check (from filter daySpec)
+};
+
+/** Highlight night events matching specific types */
+export type NightEventHighlight = {
+  eventType: 'fairy' | 'witch' | 'meteor' | 'ufo' | 'owl' | 'any';
+  days: number[];
+};
+
+/** Highlight days matching luck criteria */
+export type LuckHighlight = {
+  minLuck?: number;
+  maxLuck?: number;
+  days: number[];
+};
+
+/** Highlight days matching weather type */
+export type WeatherHighlight = {
+  weatherType: 'sunny' | 'rain' | 'storm' | 'windy' | 'snow' | 'any';
+  days: number[];
+};
+
+/** Highlight geode slots containing target items */
+export type GeodeHighlight = {
+  geodeNumbers: number[]; // Which geode slots to highlight
+  targetItems: number[]; // Item IDs to highlight
+};
+
+/** Highlight mine floors matching criteria */
+export type MineFloorHighlight = {
+  floors: number[]; // Specific floors to highlight
+  hasMushroom?: boolean; // Highlight mushroom floors
+};
+
+/** Highlight days with specific dish */
+export type DishHighlight = {
+  dishId: number;
+  days: number[];
+};
+
+// ============================================================================
 // Panel Types (Discriminated Union)
 // ============================================================================
 
@@ -32,24 +82,28 @@ export type CartPanel = {
   type: 'cart';
   id: string;
   dayRange: DayRange;
+  highlights?: CartHighlight[];
 };
 
 export type NightEventsPanel = {
   type: 'night_events';
   id: string;
   dayRange: DayRange;
+  highlights?: NightEventHighlight[];
 };
 
 export type DailyLuckPanel = {
   type: 'daily_luck';
   id: string;
   dayRange: DayRange;
+  highlights?: LuckHighlight[];
 };
 
 export type WeatherPanel = {
   type: 'weather';
   id: string;
   dayRange: DayRange;
+  highlights?: WeatherHighlight[];
 };
 
 export type GeodesPanel = {
@@ -57,6 +111,7 @@ export type GeodesPanel = {
   id: string;
   geodeType: 'geode' | 'frozen' | 'magma' | 'omni' | 'trove' | 'coconut';
   geodeRange: GeodeRange;
+  highlights?: GeodeHighlight[];
 };
 
 export type MineFloorsPanel = {
@@ -64,12 +119,14 @@ export type MineFloorsPanel = {
   id: string;
   day: number;
   floorRange: FloorRange;
+  highlights?: MineFloorHighlight[];
 };
 
 export type DishPanel = {
   type: 'dish';
   id: string;
   dayRange: DayRange;
+  highlights?: DishHighlight[];
 };
 
 export type ExplorePanel =
