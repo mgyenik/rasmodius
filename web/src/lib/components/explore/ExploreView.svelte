@@ -33,6 +33,10 @@
 		panels = panels.filter((p) => p.id !== panelId);
 	}
 
+	function handleUpdatePanel(updated: ExplorePanel) {
+		panels = panels.map((p) => (p.id === updated.id ? updated : p));
+	}
+
 	function handleAddPanel(panel: ExplorePanel) {
 		panels = [...panels, panel];
 	}
@@ -64,7 +68,7 @@
 	{#if wasm}
 		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 			{#each panels as panel (panel.id)}
-				<PanelContainer {panel} onRemove={() => handleRemovePanel(panel.id)}>
+				<PanelContainer {panel} onRemove={() => handleRemovePanel(panel.id)} onUpdate={handleUpdatePanel}>
 					{#if panel.type === 'daily_luck'}
 						<DailyLuckPanel {panel} {seed} {wasm} />
 					{:else if panel.type === 'weather'}

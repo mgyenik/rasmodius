@@ -94,6 +94,41 @@ test.describe('Seed Explorer', () => {
     await expect(page.getByText('Omni Geodes')).toBeVisible();
   });
 
+  test('can edit panel range', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByText('Filter Builder')).toBeVisible({ timeout: 10000 });
+
+    // Switch to Explore tab
+    await page.getByRole('button', { name: 'Explore Seed' }).click();
+    await expect(page.getByText('Daily Luck')).toBeVisible();
+
+    // Add a geodes panel to test editing
+    await page.getByRole('button', { name: 'Add Panel' }).click();
+    await page.getByRole('button', { name: 'Omni Geodes' }).click();
+    await expect(page.getByText('Omni Geodes')).toBeVisible();
+
+    // Click the edit button on the Omni Geodes panel
+    // Find the panel container that has both "Omni Geodes" and "#1-10" (the default range)
+    const geodePanel = page.locator('.shadow-sm').filter({ hasText: '#1-10' });
+    await geodePanel.getByRole('button', { name: 'Edit panel range' }).click();
+
+    // Should see the edit form with start/end inputs
+    await expect(page.getByText('Save')).toBeVisible();
+    await expect(page.getByText('Cancel')).toBeVisible();
+
+    // Change the range - find the number inputs in the editor
+    const rangeInputs = page.locator('input[type="number"]');
+    // The geode inputs are the ones after the day inputs
+    await rangeInputs.nth(-2).fill('5'); // start
+    await rangeInputs.nth(-1).fill('20'); // end
+
+    // Save
+    await page.getByRole('button', { name: 'Save' }).click();
+
+    // Should see the updated range in the panel header
+    await expect(page.getByText('#5-20')).toBeVisible();
+  });
+
   test('copy link button works', async ({ page, context }) => {
     // Grant clipboard permissions
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
