@@ -91,7 +91,7 @@
 	<!-- Examples -->
 	<div class="flex flex-wrap gap-2">
 		<span class="text-sm text-gray-500 py-1">Examples:</span>
-		{#each FILTER_EXAMPLES as example, i}
+		{#each FILTER_EXAMPLES as example, i (example.name)}
 			<button
 				onclick={() => loadExample(i)}
 				class="px-3 py-1 text-sm bg-amber-100 text-amber-800 rounded hover:bg-amber-200 transition-colors"

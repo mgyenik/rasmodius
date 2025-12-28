@@ -123,7 +123,7 @@
 	<div class="text-sm text-gray-500 italic">No events in this range</div>
 {:else}
 	<div class="flex flex-wrap gap-2 text-sm">
-		{#each eventsWithContent as { day, event }}
+		{#each eventsWithContent as { day, event } (day)}
 			{@const highlighted = isHighlighted(event, day)}
 			<div
 				class="rounded-lg px-2 py-1 transition-all {getEventClass(event)}

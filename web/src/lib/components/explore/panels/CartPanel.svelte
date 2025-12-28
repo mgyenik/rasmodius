@@ -66,13 +66,13 @@
 	<div class="text-sm text-gray-500 italic">No cart days in this range</div>
 {:else}
 	<div class="space-y-2">
-		{#each cartData as { day, items }}
+		{#each cartData as { day, items } (day)}
 			<div class="border-b border-gray-100 pb-2 last:border-0 last:pb-0">
 				<div class="font-medium text-amber-700 text-sm mb-1">
 					Day {day} ({getDayOfWeek(day)})
 				</div>
 				<div class="flex flex-wrap gap-1">
-					{#each items as item}
+					{#each items as item, i (i)}
 						{@const highlighted = isHighlighted(item, day)}
 						<span
 							class="inline-flex items-center px-1.5 py-0.5 rounded text-xs transition-all

@@ -57,7 +57,7 @@
 		<div
 			class="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1"
 		>
-			{#each panelOptions as option}
+			{#each panelOptions as option (option.label)}
 				<button
 					class="w-full px-3 py-2 text-left text-sm hover:bg-amber-50 flex items-center gap-2 transition-colors"
 					onclick={() => handleAdd(option.create)}

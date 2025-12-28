@@ -105,7 +105,7 @@
 				<div
 					class="absolute z-10 w-64 mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto"
 				>
-					{#each filteredItems as item}
+					{#each filteredItems as item (item.id)}
 						<button
 							type="button"
 							class="w-full px-2 py-1 text-left text-sm hover:bg-amber-50 {condition.itemId ===
@@ -178,7 +178,7 @@
 			value={condition.targetItems[0]}
 			onchange={(e) => (condition.targetItems = [parseInt(e.currentTarget.value)])}
 		>
-			{#each POPULAR_GEODE_ITEMS as item}
+			{#each POPULAR_GEODE_ITEMS as item (item.id)}
 				<option value={item.id}>{item.name}</option>
 			{/each}
 		</select>

@@ -544,7 +544,7 @@
 									disabled={isSearching}
 									class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
 								>
-									{#each Object.entries(SEARCH_RANGES) as [key, range]}
+									{#each Object.entries(SEARCH_RANGES) as [key, range] (key)}
 										<option value={key}>{range.label}</option>
 									{/each}
 								</select>
@@ -631,7 +631,7 @@
 							Found {searchResults.length} matching seed{searchResults.length !== 1 ? 's' : ''}
 						</h2>
 						<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-							{#each searchResults.slice(0, 50) as matchingSeed}
+							{#each searchResults.slice(0, 50) as matchingSeed (matchingSeed)}
 								<button
 									onclick={() => exploreSearchResult(matchingSeed)}
 									class="p-3 bg-amber-50 rounded-lg hover:bg-amber-100 transition-colors text-center border border-amber-200"

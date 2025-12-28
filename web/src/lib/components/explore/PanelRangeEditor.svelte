@@ -143,7 +143,7 @@
 				bind:value={geodeType}
 				class="px-1.5 py-0.5 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
 			>
-				{#each geodeOptions as opt}
+				{#each geodeOptions as opt (opt.value)}
 					<option value={opt.value}>{opt.label}</option>
 				{/each}
 			</select>

@@ -50,7 +50,7 @@
 	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load dish data</div>
 {:else}
 	<div class="grid grid-cols-7 gap-1 text-xs">
-		{#each dishData as { day, dish }}
+		{#each dishData as { day, dish } (day)}
 			{@const highlighted = isHighlighted(dish.id, day)}
 			<div
 				class="rounded px-1 py-0.5 text-center transition-all

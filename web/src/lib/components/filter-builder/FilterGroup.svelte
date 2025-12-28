@@ -60,7 +60,7 @@
 
 		<!-- Conditions List -->
 		<div class="space-y-2">
-			{#each group.conditions as item, index}
+			{#each group.conditions as item, index (index)}
 				<div class="flex items-start gap-2">
 					{#if index > 0}
 						<span class="text-xs text-gray-400 uppercase py-2 w-8 text-center flex-shrink-0">

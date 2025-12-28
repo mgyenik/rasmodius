@@ -101,9 +101,9 @@
 	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load floor data</div>
 {:else}
 	<div class="space-y-1">
-		{#each floorGroups as group}
+		{#each floorGroups as group, gi (gi)}
 			<div class="flex gap-0.5">
-				{#each group as floor}
+				{#each group as floor (floor.floor)}
 					{@const highlighted = isHighlighted(floor)}
 					<div
 						class="w-7 h-7 flex items-center justify-center rounded text-xs font-medium transition-all {getFloorClass(

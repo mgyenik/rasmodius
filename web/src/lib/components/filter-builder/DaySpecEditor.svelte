@@ -50,7 +50,7 @@
 	value={daySpec.type}
 	onchange={(e) => updateType(e.currentTarget.value as DaySpec['type'])}
 >
-	{#each allowedTypes as type}
+	{#each allowedTypes as type (type)}
 		<option value={type}>{labels[type]}</option>
 	{/each}
 </select>

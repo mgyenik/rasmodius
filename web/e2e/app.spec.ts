@@ -52,10 +52,11 @@ test.describe('App Loading', () => {
 		await page.getByRole('button', { name: 'Explore Seed' }).click();
 
 		// Check that default panels are visible (new dynamic panel system)
-		await expect(page.getByText('Daily Luck')).toBeVisible();
-		await expect(page.getByText('Weather')).toBeVisible();
-		await expect(page.getByText('Night Events')).toBeVisible();
-		await expect(page.getByText('Traveling Cart')).toBeVisible();
+		// Use role='button' to avoid matching info panel text
+		await expect(page.getByRole('button', { name: /Daily Luck/ })).toBeVisible();
+		await expect(page.getByRole('button', { name: /Weather/ })).toBeVisible();
+		await expect(page.getByRole('button', { name: /Night Events/ })).toBeVisible();
+		await expect(page.getByRole('button', { name: /Traveling Cart/ })).toBeVisible();
 		// Check Add Panel button
 		await expect(page.getByRole('button', { name: 'Add Panel' })).toBeVisible();
 	});

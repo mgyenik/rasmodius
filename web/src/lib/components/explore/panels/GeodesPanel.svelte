@@ -89,7 +89,7 @@
 	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load geode data</div>
 {:else}
 	<div class="space-y-1">
-		{#each geodeData as result, i}
+		{#each geodeData as result, i (i)}
 			{@const geodeNum = panel.geodeRange.start + i}
 			{@const highlighted = isHighlighted(geodeNum, result.item_id)}
 			{@const valuable = isValuable(result.item_id)}

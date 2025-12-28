@@ -63,7 +63,7 @@
 	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load luck data</div>
 {:else}
 	<div class="grid grid-cols-7 gap-1 text-xs">
-		{#each luckData as { day, luck }}
+		{#each luckData as { day, luck } (day)}
 			{@const highlighted = isHighlighted(luck, day)}
 			<div
 				class="rounded px-1 py-0.5 text-center transition-all {getLuckColor(luck)}
