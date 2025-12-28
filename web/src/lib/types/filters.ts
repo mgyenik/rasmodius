@@ -136,14 +136,14 @@ export const FILTER_EXAMPLES: { name: string; description: string; filter: Filte
     },
   },
   {
-    name: 'Prismatic Shard Geode',
-    description: 'Prismatic Shard in first 20 Omni Geodes',
+    name: 'Triple Prismatic Shards',
+    description: 'Prismatic Shard in Omni Geodes #16, #17, AND #18',
     filter: {
       id: 'preset-prismatic',
-      logic: 'or',
-      conditions: Array.from({ length: 20 }, (_, i) => ({
+      logic: 'and',
+      conditions: [16, 17, 18].map((n) => ({
         type: 'geode' as const,
-        geodeNumber: i + 1,
+        geodeNumber: n,
         geodeType: 'omni' as const,
         targetItems: [74], // Prismatic Shard
       })),
