@@ -25,11 +25,20 @@
 		wasm: WasmModule;
 	} = $props();
 
-	let geodeData: GeodeResult[] = $derived.by(() => {
-		if (!wasm) return [];
-		const count = panel.geodeRange.end - panel.geodeRange.start + 1;
-		return wasm.predict_geodes(seed, panel.geodeRange.start, count, panel.geodeType, version);
+	let result = $derived.by(() => {
+		if (!wasm) return { data: [] as GeodeResult[], error: null as string | null };
+		try {
+			const count = panel.geodeRange.end - panel.geodeRange.start + 1;
+			const data = wasm.predict_geodes(seed, panel.geodeRange.start, count, panel.geodeType, version);
+			return { data, error: null };
+		} catch (e) {
+			console.error('WASM prediction failed:', e);
+			return { data: [] as GeodeResult[], error: String(e) };
+		}
 	});
+
+	let geodeData = $derived(result.data);
+	let wasmError = $derived(result.error);
 
 	function isValuable(itemId: number): boolean {
 		// Prismatic shard, diamonds, and other valuable items
@@ -68,6 +77,9 @@
 	}
 </script>
 
+{#if wasmError}
+	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load geode data</div>
+{:else}
 <div class="space-y-1">
 	{#each geodeData as result, i}
 		{@const geodeNum = panel.geodeRange.start + i}
@@ -91,3 +103,4 @@
 		</div>
 	{/each}
 </div>
+{/if}

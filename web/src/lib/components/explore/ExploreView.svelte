@@ -68,6 +68,8 @@
 				type="number"
 				bind:value={seed}
 				oninput={handleSeedInput}
+				min="1"
+				max="2147483647"
 				class="w-32 px-2 py-1 border border-gray-300 rounded text-sm"
 			/>
 		</div>

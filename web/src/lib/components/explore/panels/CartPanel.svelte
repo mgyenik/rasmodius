@@ -20,10 +20,19 @@
 		wasm: WasmModule;
 	} = $props();
 
-	let cartData: DayCart[] = $derived.by(() => {
-		if (!wasm) return [];
-		return wasm.predict_cart_range(seed, panel.dayRange.start, panel.dayRange.end, version);
+	let result = $derived.by(() => {
+		if (!wasm) return { data: [] as DayCart[], error: null as string | null };
+		try {
+			const data = wasm.predict_cart_range(seed, panel.dayRange.start, panel.dayRange.end, version);
+			return { data, error: null };
+		} catch (e) {
+			console.error('WASM prediction failed:', e);
+			return { data: [] as DayCart[], error: String(e) };
+		}
 	});
+
+	let cartData = $derived(result.data);
+	let wasmError = $derived(result.error);
 
 	function formatPrice(price: number): string {
 		return price.toLocaleString() + 'g';
@@ -49,7 +58,9 @@
 	}
 </script>
 
-{#if cartData.length === 0}
+{#if wasmError}
+	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load cart data</div>
+{:else if cartData.length === 0}
 	<div class="text-sm text-gray-500 italic">No cart days in this range</div>
 {:else}
 	<div class="space-y-2">

@@ -17,10 +17,19 @@
 		wasm: WasmModule;
 	} = $props();
 
-	let dishData: DayDish[] = $derived.by(() => {
-		if (!wasm) return [];
-		return wasm.predict_dish_range(seed, panel.dayRange.start, panel.dayRange.end);
+	let result = $derived.by(() => {
+		if (!wasm) return { data: [] as DayDish[], error: null as string | null };
+		try {
+			const data = wasm.predict_dish_range(seed, panel.dayRange.start, panel.dayRange.end);
+			return { data, error: null };
+		} catch (e) {
+			console.error('WASM prediction failed:', e);
+			return { data: [] as DayDish[], error: String(e) };
+		}
 	});
+
+	let dishData = $derived(result.data);
+	let wasmError = $derived(result.error);
 
 	/** Check if a dish matches any of the highlight criteria */
 	function isHighlighted(dishId: number, day: number): boolean {
@@ -35,6 +44,9 @@
 	}
 </script>
 
+{#if wasmError}
+	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load dish data</div>
+{:else}
 <div class="grid grid-cols-7 gap-1 text-xs">
 	{#each dishData as { day, dish }}
 		{@const highlighted = isHighlighted(dish.id, day)}
@@ -52,3 +64,4 @@
 		</div>
 	{/each}
 </div>
+{/if}

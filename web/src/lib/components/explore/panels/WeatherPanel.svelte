@@ -18,10 +18,19 @@
 		wasm: WasmModule;
 	} = $props();
 
-	let weatherData: WeatherData[] = $derived.by(() => {
-		if (!wasm) return [];
-		return wasm.predict_weather_range(seed, panel.dayRange.start, panel.dayRange.end, version);
+	let result = $derived.by(() => {
+		if (!wasm) return { data: [] as WeatherData[], error: null as string | null };
+		try {
+			const data = wasm.predict_weather_range(seed, panel.dayRange.start, panel.dayRange.end, version);
+			return { data, error: null };
+		} catch (e) {
+			console.error('WASM prediction failed:', e);
+			return { data: [] as WeatherData[], error: String(e) };
+		}
 	});
+
+	let weatherData = $derived(result.data);
+	let wasmError = $derived(result.error);
 
 	/** Map internal weather types to filter weather types */
 	function normalizeWeatherType(weather: string): string {
@@ -84,6 +93,9 @@
 	}
 </script>
 
+{#if wasmError}
+	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load weather data</div>
+{:else}
 <div class="grid grid-cols-7 gap-1 text-xs">
 	{#each weatherData as { day, weather }}
 		{@const highlighted = isHighlighted(weather, day)}
@@ -97,3 +109,4 @@
 		</div>
 	{/each}
 </div>
+{/if}

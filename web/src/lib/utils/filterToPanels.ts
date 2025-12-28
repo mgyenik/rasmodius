@@ -8,7 +8,7 @@
  */
 
 import type { FilterRoot, FilterCondition, FilterGroup, DaySpec } from '$lib/types/filters';
-import { getDaysFromSpec } from '$lib/types/filters';
+import { getDaysFromSpec } from '$lib/utils/daySpec';
 import {
   type ExplorePanel,
   type DayRange,

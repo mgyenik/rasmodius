@@ -14,10 +14,19 @@
 		wasm: WasmModule;
 	} = $props();
 
-	let luckData: LuckData[] = $derived.by(() => {
-		if (!wasm) return [];
-		return wasm.predict_luck_range(seed, panel.dayRange.start, panel.dayRange.end);
+	let result = $derived.by(() => {
+		if (!wasm) return { data: [] as LuckData[], error: null as string | null };
+		try {
+			const data = wasm.predict_luck_range(seed, panel.dayRange.start, panel.dayRange.end);
+			return { data, error: null };
+		} catch (e) {
+			console.error('WASM prediction failed:', e);
+			return { data: [] as LuckData[], error: String(e) };
+		}
 	});
+
+	let luckData = $derived(result.data);
+	let wasmError = $derived(result.error);
 
 	function getLuckColor(luck: number): string {
 		if (luck >= 0.07) return 'text-green-600 bg-green-50';
@@ -46,6 +55,9 @@
 	}
 </script>
 
+{#if wasmError}
+	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load luck data</div>
+{:else}
 <div class="grid grid-cols-7 gap-1 text-xs">
 	{#each luckData as { day, luck }}
 		{@const highlighted = isHighlighted(luck, day)}
@@ -59,3 +71,4 @@
 		</div>
 	{/each}
 </div>
+{/if}

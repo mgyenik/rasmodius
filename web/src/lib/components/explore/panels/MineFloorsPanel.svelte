@@ -29,16 +29,25 @@
 		wasm: WasmModule;
 	} = $props();
 
-	let floorData: FloorPrediction[] = $derived.by(() => {
-		if (!wasm) return [];
-		return wasm.predict_mine_floors(
-			seed,
-			panel.day,
-			panel.floorRange.start,
-			panel.floorRange.end,
-			version
-		);
+	let result = $derived.by(() => {
+		if (!wasm) return { data: [] as FloorPrediction[], error: null as string | null };
+		try {
+			const data = wasm.predict_mine_floors(
+				seed,
+				panel.day,
+				panel.floorRange.start,
+				panel.floorRange.end,
+				version
+			);
+			return { data, error: null };
+		} catch (e) {
+			console.error('WASM prediction failed:', e);
+			return { data: [] as FloorPrediction[], error: String(e) };
+		}
 	});
+
+	let floorData = $derived(result.data);
+	let wasmError = $derived(result.error);
 
 	// Group floors into ranges of 10 for display
 	let floorGroups = $derived.by(() => {
@@ -84,6 +93,9 @@
 	}
 </script>
 
+{#if wasmError}
+	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load floor data</div>
+{:else}
 <div class="space-y-1">
 	{#each floorGroups as group}
 		<div class="flex gap-0.5">
@@ -105,8 +117,9 @@
 	{/each}
 </div>
 
-<div class="flex gap-3 mt-2 text-xs text-gray-500">
-	<span><span class="inline-block w-3 h-3 bg-red-100 rounded mr-1"></span>Monster</span>
-	<span><span class="inline-block w-3 h-3 bg-gray-300 rounded mr-1"></span>Dark</span>
-	<span><span class="inline-block w-3 h-3 bg-amber-100 rounded mr-1"></span>Mushroom</span>
-</div>
+	<div class="flex gap-3 mt-2 text-xs text-gray-500">
+		<span><span class="inline-block w-3 h-3 bg-red-100 rounded mr-1"></span>Monster</span>
+		<span><span class="inline-block w-3 h-3 bg-gray-300 rounded mr-1"></span>Dark</span>
+		<span><span class="inline-block w-3 h-3 bg-amber-100 rounded mr-1"></span>Mushroom</span>
+	</div>
+{/if}

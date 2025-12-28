@@ -22,10 +22,13 @@ export interface URLStateParams {
 
 /**
  * Build URL search params from state
+ * Exported for testing purposes
  */
-function buildSearchParams(params: URLStateParams): URLSearchParams {
-  const currentPage = get(page);
-  const searchParams = new URLSearchParams(currentPage.url.searchParams);
+export function buildSearchParams(
+  params: URLStateParams,
+  currentSearchParams: URLSearchParams = new URLSearchParams()
+): URLSearchParams {
+  const searchParams = new URLSearchParams(currentSearchParams);
 
   // Filter
   if (params.filter !== undefined) {
@@ -77,8 +80,8 @@ function buildSearchParams(params: URLStateParams): URLSearchParams {
  * - Change seed (debounced)
  */
 export function pushURLState(params: URLStateParams): void {
-  const searchParams = buildSearchParams(params);
   const currentPage = get(page);
+  const searchParams = buildSearchParams(params, currentPage.url.searchParams);
   const url = new URL(currentPage.url);
   url.search = searchParams.toString();
 
@@ -104,8 +107,8 @@ export function pushURLState(params: URLStateParams): void {
  * - Version changes
  */
 export function replaceURLState(params: URLStateParams): void {
-  const searchParams = buildSearchParams(params);
   const currentPage = get(page);
+  const searchParams = buildSearchParams(params, currentPage.url.searchParams);
   const url = new URL(currentPage.url);
   url.search = searchParams.toString();
 

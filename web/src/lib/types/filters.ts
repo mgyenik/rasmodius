@@ -12,21 +12,6 @@ export type DaySpec =
   | { type: 'season'; season: 0 | 1 | 2 | 3; year?: number } // 0=Spring, 1=Summer, 2=Fall, 3=Winter
   | { type: 'any' }; // Any day
 
-export function getDaysFromSpec(spec: DaySpec, maxDay: number = 224): number[] {
-  switch (spec.type) {
-    case 'exact':
-      return [spec.day];
-    case 'range':
-      return Array.from({ length: spec.end - spec.start + 1 }, (_, i) => spec.start + i);
-    case 'season': {
-      const seasonStart = spec.season * 28 + 1 + ((spec.year ?? 1) - 1) * 112;
-      return Array.from({ length: 28 }, (_, i) => seasonStart + i).filter(d => d <= maxDay);
-    }
-    case 'any':
-      return Array.from({ length: maxDay }, (_, i) => i + 1);
-  }
-}
-
 // ============================================================================
 // Filter Conditions
 // ============================================================================

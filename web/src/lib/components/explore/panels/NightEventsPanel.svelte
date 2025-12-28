@@ -23,10 +23,19 @@
 		wasm: WasmModule;
 	} = $props();
 
-	let eventsData: EventData[] = $derived.by(() => {
-		if (!wasm) return [];
-		return wasm.predict_night_events_range(seed, panel.dayRange.start, panel.dayRange.end, version);
+	let result = $derived.by(() => {
+		if (!wasm) return { data: [] as EventData[], error: null as string | null };
+		try {
+			const data = wasm.predict_night_events_range(seed, panel.dayRange.start, panel.dayRange.end, version);
+			return { data, error: null };
+		} catch (e) {
+			console.error('WASM prediction failed:', e);
+			return { data: [] as EventData[], error: String(e) };
+		}
 	});
+
+	let eventsData = $derived(result.data);
+	let wasmError = $derived(result.error);
 
 	// Only show days with actual events
 	let eventsWithContent = $derived(eventsData.filter((e) => e.event !== 'none'));
@@ -101,7 +110,9 @@
 	}
 </script>
 
-{#if eventsWithContent.length === 0}
+{#if wasmError}
+	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load event data</div>
+{:else if eventsWithContent.length === 0}
 	<div class="text-sm text-gray-500 italic">No events in this range</div>
 {:else}
 	<div class="flex flex-wrap gap-2 text-sm">

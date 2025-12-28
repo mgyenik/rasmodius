@@ -6,7 +6,7 @@
  */
 
 import type { FilterGroup, FilterCondition, DaySpec } from '$lib/types/filters';
-import { getDaysFromSpec } from '$lib/types/filters';
+import { getDaysFromSpec } from '$lib/utils/daySpec';
 
 /**
  * Convert a UI filter to JSON string for WASM.
