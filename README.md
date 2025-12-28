@@ -11,6 +11,7 @@ A high-performance Stardew Valley seed finder for speedrunners and challenge pla
 - **Filter → Explore** - Click a search result to auto-generate explore panels based on your filter criteria
 - **Shareable URLs** - Both search filters and explore state are encoded in the URL for easy sharing
 - **Undo/Redo** - Browser back/forward buttons work as undo/redo for your actions
+- **Privacy** - 100% client-side, no data sent to servers, no tracking or analytics
 
 ### Browser Navigation as Undo/Redo
 

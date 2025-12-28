@@ -25,6 +25,7 @@
 	let error = $state<string | null>(null);
 	let activeTab = $state<'explore' | 'search'>('search');
 	let copySuccess = $state(false);
+	let infoCollapsed = $state(false);
 
 	// Filter state
 	let filter = $state<FilterRoot>(createEmptyFilter());
@@ -321,14 +322,74 @@
 
 <main class="min-h-screen bg-amber-50 p-4 md:p-8">
 	<div class="max-w-6xl mx-auto">
-		<header class="text-center mb-6">
-			<h1 class="text-4xl font-bold text-amber-900 mb-2">Rasmodius</h1>
-			<p class="text-amber-700 mb-4">Stardew Valley Seed Finder</p>
-			<p class="text-sm text-amber-600 max-w-2xl mx-auto">
-				<strong>1.</strong> Add filters for what you want (cart items, lucky days, events).
-				<strong>2.</strong> Click "Search Seeds" to find matching seeds.
-				<strong>3.</strong> Click any result to explore it with detailed predictions.
-			</p>
+		<header class="mb-6">
+			<div class="flex items-center justify-between mb-2">
+				<h1 class="text-4xl font-bold text-amber-900">Rasmodius</h1>
+				<button
+					onclick={() => infoCollapsed = !infoCollapsed}
+					class="text-amber-600 hover:text-amber-800 text-sm flex items-center gap-1"
+				>
+					{#if infoCollapsed}
+						<span>Show info</span>
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+						</svg>
+					{:else}
+						<span>Hide info</span>
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+						</svg>
+					{/if}
+				</button>
+			</div>
+			<p class="text-amber-700">Stardew Valley Seed Finder</p>
+
+			{#if !infoCollapsed}
+				<div class="mt-4 bg-white/50 rounded-lg p-4 text-sm text-amber-800 space-y-3">
+					<p>
+						A high-performance seed finder for <strong>speedrunners</strong> and <strong>challenge players</strong>.
+						Search millions of seeds to find ones with specific characteristics (cart items, lucky days, night events, weather, geodes, mine conditions),
+						then explore them with dynamic prediction panels.
+					</p>
+
+					<div class="flex flex-wrap gap-x-6 gap-y-1 text-amber-700">
+						<span class="flex items-center gap-1">
+							<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+							</svg>
+							100% client-side — nothing sent to servers
+						</span>
+						<span class="flex items-center gap-1">
+							<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+							</svg>
+							No tracking or analytics
+						</span>
+						<span class="flex items-center gap-1">
+							<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+							</svg>
+							<a href="https://github.com/mgyenik/rasmodius" target="_blank" rel="noopener" class="underline hover:text-amber-900">Open source (MIT)</a>
+						</span>
+					</div>
+
+					<div class="border-t border-amber-200 pt-3">
+						<p class="font-medium mb-1">How to use:</p>
+						<ol class="list-decimal list-inside space-y-0.5 text-amber-700">
+							<li>Add filters for what you want (cart items, lucky days, events)</li>
+							<li>Click "Search Seeds" to find matching seeds</li>
+							<li>Click any result to explore it with detailed predictions</li>
+						</ol>
+					</div>
+
+					<p class="text-xs text-amber-600 border-t border-amber-200 pt-3">
+						Built on the incredible RNG research from
+						<a href="https://github.com/MouseyPounds/stardew-predictor" target="_blank" rel="noopener" class="underline hover:text-amber-800">stardew-predictor</a>
+						and
+						<a href="https://github.com/Bla-De/StardewSeedScripts" target="_blank" rel="noopener" class="underline hover:text-amber-800">StardewSeedScripts</a>.
+					</p>
+				</div>
+			{/if}
 		</header>
 
 		{#if error}
