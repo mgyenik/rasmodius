@@ -250,20 +250,19 @@ describe('filterToJson', () => {
       expect(cond.day_end).toBe(168);
     });
 
-    it('handles any day (defaults to Y1)', () => {
+    it('handles wide range correctly', () => {
       const filter: FilterGroup = {
         id: 'test',
         logic: 'and',
         conditions: [
           {
             type: 'daily_luck',
-            daySpec: { type: 'any' },
+            daySpec: { type: 'range', start: 1, end: 224 },
           },
         ],
       };
       const result = JSON.parse(filterToSearchJson(filter));
       const cond = result.conditions[0];
-      // 'any' expands to days 1-224 (maxDay default is 224 = 2 years)
       expect(cond.day_start).toBe(1);
       expect(cond.day_end).toBe(224);
     });

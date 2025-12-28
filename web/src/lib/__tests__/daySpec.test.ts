@@ -39,15 +39,15 @@ describe('getDaysFromSpec', () => {
 		expect(days[0]).toBe(113); // Day 113 is Spring 1 Y2
 	});
 
-	it('should handle any', () => {
-		const days = getDaysFromSpec({ type: 'any' }, 28);
+	it('should handle long ranges', () => {
+		const days = getDaysFromSpec({ type: 'range', start: 1, end: 28 });
 		expect(days.length).toBe(28);
 		expect(days[0]).toBe(1);
 		expect(days[27]).toBe(28);
 	});
 
-	it('should respect maxDay limit', () => {
-		const days = getDaysFromSpec({ type: 'any' }, 10);
+	it('should handle season with maxDay limit', () => {
+		const days = getDaysFromSpec({ type: 'season', season: 0, year: 1 }, 10);
 		expect(days.length).toBe(10);
 	});
 });

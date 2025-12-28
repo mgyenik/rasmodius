@@ -54,9 +54,6 @@ export function daySpecToRange(spec: DaySpec): DayRange {
       const seasonStart = spec.season * 28 + 1 + (year - 1) * 112;
       return { start: seasonStart, end: seasonStart + 27 };
     }
-    case 'any':
-      // Default to first season for 'any' - reasonable starting view
-      return { start: 1, end: 28 };
   }
 }
 

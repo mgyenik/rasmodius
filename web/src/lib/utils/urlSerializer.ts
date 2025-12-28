@@ -29,7 +29,6 @@ const DAY_SPEC_TYPE_MAP: Record<string, string> = {
   'exact': 'e',
   'range': 'r',
   'season': 's',
-  'any': 'a',
 };
 
 const DAY_SPEC_TYPE_REVERSE: Record<string, string> = Object.fromEntries(
@@ -48,8 +47,6 @@ function compressDaySpec(spec: DaySpec): unknown {
       return { t, s: spec.start, e: spec.end };
     case 'season':
       return { t, s: spec.season, y: spec.year };
-    case 'any':
-      return { t };
   }
 }
 
@@ -65,10 +62,9 @@ function decompressDaySpec(obj: Record<string, unknown>): DaySpec {
       return { type: 'range', start: obj.s as number, end: obj.e as number };
     case 'season':
       return { type: 'season', season: obj.s as 0 | 1 | 2 | 3, year: obj.y as number };
-    case 'any':
-      return { type: 'any' };
     default:
-      return { type: 'any' };
+      // Default to Spring Y1 for invalid/legacy types
+      return { type: 'season', season: 0, year: 1 };
   }
 }
 

@@ -39,9 +39,9 @@ describe('filterToPanels', () => {
       expect(result).toEqual({ start: 1, end: 28 });
     });
 
-    it('converts any day to first season', () => {
-      const result = daySpecToRange({ type: 'any' });
-      expect(result).toEqual({ start: 1, end: 28 });
+    it('converts season with year 2 correctly', () => {
+      const result = daySpecToRange({ type: 'season', season: 1, year: 2 });
+      expect(result).toEqual({ start: 141, end: 168 }); // Summer Y2
     });
   });
 

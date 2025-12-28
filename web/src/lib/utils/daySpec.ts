@@ -16,9 +16,6 @@ export function getDaysFromSpec(spec: DaySpec, maxDay: number = 224): number[] {
 			const seasonStart = spec.season * 28 + 1 + ((spec.year ?? 1) - 1) * 112;
 			return Array.from({ length: 28 }, (_, i) => seasonStart + i).filter((d) => d <= maxDay);
 		}
-
-		case 'any':
-			return Array.from({ length: maxDay }, (_, i) => i + 1);
 	}
 }
 

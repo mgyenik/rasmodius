@@ -3,7 +3,7 @@
 
 	let {
 		daySpec = $bindable(),
-		allowedTypes = ['exact', 'range', 'season', 'any'] as const
+		allowedTypes = ['exact', 'range', 'season'] as const
 	}: {
 		daySpec: DaySpec;
 		allowedTypes?: readonly DaySpec['type'][];
@@ -20,9 +20,6 @@
 			case 'season':
 				daySpec = { type: 'season', season: 0, year: 1 };
 				break;
-			case 'any':
-				daySpec = { type: 'any' };
-				break;
 		}
 	}
 
@@ -30,16 +27,14 @@
 	const TYPE_LABELS: Record<DaySpec['type'], string> = {
 		exact: 'on day',
 		range: 'in range',
-		season: 'in season',
-		any: 'any day'
+		season: 'in season'
 	};
 
 	// Alternative labels for cart_item style
 	const ALT_TYPE_LABELS: Record<DaySpec['type'], string> = {
 		exact: 'on day',
 		range: 'day range',
-		season: 'season',
-		any: 'any day'
+		season: 'season'
 	};
 
 	// Use alternative labels when only season/range are allowed (cart_item style)

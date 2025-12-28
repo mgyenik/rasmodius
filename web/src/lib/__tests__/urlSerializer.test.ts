@@ -262,14 +262,14 @@ describe('URL Serializer', () => {
       expect(decoded!.conditions).toHaveLength(2);
     });
 
-    it('correctly roundtrips any daySpec', () => {
+    it('correctly roundtrips season daySpec', () => {
       const filter: FilterRoot = {
         id: 'test',
         logic: 'and',
         conditions: [
           {
             type: 'daily_luck',
-            daySpec: { type: 'any' },
+            daySpec: { type: 'season', season: 2, year: 3 },
             minLuck: 0.1,
           },
         ],
@@ -280,7 +280,7 @@ describe('URL Serializer', () => {
       expect(decoded).not.toBeNull();
       const condition = decoded!.conditions[0];
       if ('type' in condition && condition.type === 'daily_luck') {
-        expect(condition.daySpec.type).toBe('any');
+        expect(condition.daySpec.type).toBe('season');
       }
     });
   });

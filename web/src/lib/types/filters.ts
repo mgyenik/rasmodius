@@ -9,8 +9,7 @@
 export type DaySpec =
   | { type: 'exact'; day: number }
   | { type: 'range'; start: number; end: number }
-  | { type: 'season'; season: 0 | 1 | 2 | 3; year?: number } // 0=Spring, 1=Summer, 2=Fall, 3=Winter
-  | { type: 'any' }; // Any day
+  | { type: 'season'; season: 0 | 1 | 2 | 3; year?: number }; // 0=Spring, 1=Summer, 2=Fall, 3=Winter
 
 // ============================================================================
 // Filter Conditions
@@ -229,7 +228,5 @@ export function getDaySpecLabel(spec: DaySpec): string {
       const year = spec.year ? ` Y${spec.year}` : '';
       return `${seasons[spec.season]}${year}`;
     }
-    case 'any':
-      return 'Any day';
   }
 }

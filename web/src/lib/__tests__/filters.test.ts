@@ -81,9 +81,11 @@ describe('DaySpec Types', () => {
 		expect(spec.season).toBe(0); // Spring
 	});
 
-	it('should allow any day spec', () => {
-		const spec: DaySpec = { type: 'any' };
-		expect(spec.type).toBe('any');
+	it('should allow range day spec', () => {
+		const spec: DaySpec = { type: 'range', start: 1, end: 28 };
+		expect(spec.type).toBe('range');
+		expect(spec.start).toBe(1);
+		expect(spec.end).toBe(28);
 	});
 });
 
