@@ -58,7 +58,9 @@
 	}
 </script>
 
-{#if wasmError}
+{#if !wasm}
+	<div class="animate-pulse bg-gray-100 h-24 rounded"></div>
+{:else if wasmError}
 	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load cart data</div>
 {:else if cartData.length === 0}
 	<div class="text-sm text-gray-500 italic">No cart days in this range</div>

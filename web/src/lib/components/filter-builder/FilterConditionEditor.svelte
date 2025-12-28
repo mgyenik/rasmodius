@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { FilterCondition, DaySpec } from '$lib/types/filters';
-	import { getConditionLabel } from '$lib/types/filters';
+	import type { FilterCondition } from '$lib/types/filters';
 	import { getItemName, ITEMS } from '$lib/data/items';
+	import DaySpecEditor from './DaySpecEditor.svelte';
 
 	let { condition = $bindable() }: {
 		condition: FilterCondition;
@@ -42,80 +42,13 @@
 		showItemDropdown = false;
 		itemSearchQuery = '';
 	}
-
-	function updateDaySpecType(type: DaySpec['type']) {
-		if (condition.type === 'daily_luck' || condition.type === 'night_event' || condition.type === 'cart_item' || condition.type === 'dish_of_day' || condition.type === 'weather' || condition.type === 'mine_floor') {
-			switch (type) {
-				case 'exact':
-					condition.daySpec = { type: 'exact', day: 1 };
-					break;
-				case 'range':
-					condition.daySpec = { type: 'range', start: 1, end: 28 };
-					break;
-				case 'season':
-					condition.daySpec = { type: 'season', season: 0, year: 1 };
-					break;
-				case 'any':
-					condition.daySpec = { type: 'any' };
-					break;
-			}
-		}
-	}
 </script>
 
 {#if condition.type === 'daily_luck'}
 	<!-- Daily Luck: [When v] [Season v] [Year] luck [min] to [max] -->
 	<div class="flex flex-wrap items-center gap-2 text-sm">
 		<span class="font-medium text-gray-700">Daily Luck</span>
-		<select
-			class="px-2 py-1 border border-gray-300 rounded text-sm"
-			value={condition.daySpec.type}
-			onchange={(e) => updateDaySpecType(e.currentTarget.value as DaySpec['type'])}
-		>
-			<option value="exact">on day</option>
-			<option value="range">in range</option>
-			<option value="season">in season</option>
-			<option value="any">any day</option>
-		</select>
-		{#if condition.daySpec.type === 'exact'}
-			<input
-				type="number"
-				class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.day}
-				min="1"
-			/>
-		{:else if condition.daySpec.type === 'range'}
-			<input
-				type="number"
-				class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.start}
-				min="1"
-			/>
-			<span class="text-gray-500">to</span>
-			<input
-				type="number"
-				class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.end}
-				min="1"
-			/>
-		{:else if condition.daySpec.type === 'season'}
-			<select
-				class="px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.season}
-			>
-				<option value={0}>Spring</option>
-				<option value={1}>Summer</option>
-				<option value={2}>Fall</option>
-				<option value={3}>Winter</option>
-			</select>
-			<span class="text-gray-500">Y</span>
-			<input
-				type="number"
-				class="w-14 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.year}
-				min="1"
-			/>
-		{/if}
+		<DaySpecEditor bind:daySpec={condition.daySpec} />
 		<span class="text-gray-500">luck</span>
 		<input
 			type="number"
@@ -151,55 +84,7 @@
 			<option value="owl">Stone Owl</option>
 			<option value="any">Any Event</option>
 		</select>
-		<select
-			class="px-2 py-1 border border-gray-300 rounded text-sm"
-			value={condition.daySpec.type}
-			onchange={(e) => updateDaySpecType(e.currentTarget.value as DaySpec['type'])}
-		>
-			<option value="exact">on day</option>
-			<option value="range">in range</option>
-			<option value="season">in season</option>
-			<option value="any">any day</option>
-		</select>
-		{#if condition.daySpec.type === 'exact'}
-			<input
-				type="number"
-				class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.day}
-				min="1"
-			/>
-		{:else if condition.daySpec.type === 'range'}
-			<input
-				type="number"
-				class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.start}
-				min="1"
-			/>
-			<span class="text-gray-500">to</span>
-			<input
-				type="number"
-				class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.end}
-				min="1"
-			/>
-		{:else if condition.daySpec.type === 'season'}
-			<select
-				class="px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.season}
-			>
-				<option value={0}>Spring</option>
-				<option value={1}>Summer</option>
-				<option value={2}>Fall</option>
-				<option value={3}>Winter</option>
-			</select>
-			<span class="text-gray-500">Y</span>
-			<input
-				type="number"
-				class="w-14 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.year}
-				min="1"
-			/>
-		{/if}
+		<DaySpecEditor bind:daySpec={condition.daySpec} />
 	</div>
 
 {:else if condition.type === 'cart_item'}
@@ -250,46 +135,7 @@
 		</div>
 
 		<span class="text-gray-500">in</span>
-		<select
-			class="px-2 py-1 border border-gray-300 rounded text-sm"
-			value={condition.daySpec.type}
-			onchange={(e) => updateDaySpecType(e.currentTarget.value as DaySpec['type'])}
-		>
-			<option value="season">season</option>
-			<option value="range">day range</option>
-		</select>
-		{#if condition.daySpec.type === 'season'}
-			<select
-				class="px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.season}
-			>
-				<option value={0}>Spring</option>
-				<option value={1}>Summer</option>
-				<option value={2}>Fall</option>
-				<option value={3}>Winter</option>
-			</select>
-			<span class="text-gray-500">Y</span>
-			<input
-				type="number"
-				class="w-14 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.year}
-				min="1"
-			/>
-		{:else if condition.daySpec.type === 'range'}
-			<input
-				type="number"
-				class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.start}
-				min="1"
-			/>
-			<span class="text-gray-500">to</span>
-			<input
-				type="number"
-				class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.end}
-				min="1"
-			/>
-		{/if}
+		<DaySpecEditor bind:daySpec={condition.daySpec} allowedTypes={['season', 'range']} />
 		<span class="text-gray-500">max</span>
 		<input
 			type="number"
@@ -349,55 +195,7 @@
 			<option value="snow">Snow</option>
 			<option value="any">Any (not sunny)</option>
 		</select>
-		<select
-			class="px-2 py-1 border border-gray-300 rounded text-sm"
-			value={condition.daySpec.type}
-			onchange={(e) => updateDaySpecType(e.currentTarget.value as DaySpec['type'])}
-		>
-			<option value="exact">on day</option>
-			<option value="range">in range</option>
-			<option value="season">in season</option>
-			<option value="any">any day</option>
-		</select>
-		{#if condition.daySpec.type === 'exact'}
-			<input
-				type="number"
-				class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.day}
-				min="1"
-			/>
-		{:else if condition.daySpec.type === 'range'}
-			<input
-				type="number"
-				class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.start}
-				min="1"
-			/>
-			<span class="text-gray-500">to</span>
-			<input
-				type="number"
-				class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.end}
-				min="1"
-			/>
-		{:else if condition.daySpec.type === 'season'}
-			<select
-				class="px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.season}
-			>
-				<option value={0}>Spring</option>
-				<option value={1}>Summer</option>
-				<option value={2}>Fall</option>
-				<option value={3}>Winter</option>
-			</select>
-			<span class="text-gray-500">Y</span>
-			<input
-				type="number"
-				class="w-14 px-2 py-1 border border-gray-300 rounded text-sm"
-				bind:value={condition.daySpec.year}
-				min="1"
-			/>
-		{/if}
+		<DaySpecEditor bind:daySpec={condition.daySpec} />
 	</div>
 
 {:else if condition.type === 'mine_floor'}
@@ -421,55 +219,7 @@
 				min="1"
 				max="120"
 			/>
-			<select
-				class="px-2 py-1 border border-gray-300 rounded text-sm"
-				value={condition.daySpec.type}
-				onchange={(e) => updateDaySpecType(e.currentTarget.value as DaySpec['type'])}
-			>
-				<option value="exact">on day</option>
-				<option value="range">in range</option>
-				<option value="season">in season</option>
-				<option value="any">any day</option>
-			</select>
-			{#if condition.daySpec.type === 'exact'}
-				<input
-					type="number"
-					class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-					bind:value={condition.daySpec.day}
-					min="1"
-				/>
-			{:else if condition.daySpec.type === 'range'}
-				<input
-					type="number"
-					class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-					bind:value={condition.daySpec.start}
-					min="1"
-				/>
-				<span class="text-gray-500">to</span>
-				<input
-					type="number"
-					class="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-					bind:value={condition.daySpec.end}
-					min="1"
-				/>
-			{:else if condition.daySpec.type === 'season'}
-				<select
-					class="px-2 py-1 border border-gray-300 rounded text-sm"
-					bind:value={condition.daySpec.season}
-				>
-					<option value={0}>Spring</option>
-					<option value={1}>Summer</option>
-					<option value={2}>Fall</option>
-					<option value={3}>Winter</option>
-				</select>
-				<span class="text-gray-500">Y</span>
-				<input
-					type="number"
-					class="w-14 px-2 py-1 border border-gray-300 rounded text-sm"
-					bind:value={condition.daySpec.year}
-					min="1"
-				/>
-			{/if}
+			<DaySpecEditor bind:daySpec={condition.daySpec} />
 		</div>
 		<div class="flex flex-wrap gap-4 text-sm">
 			<label class="flex items-center gap-1.5">

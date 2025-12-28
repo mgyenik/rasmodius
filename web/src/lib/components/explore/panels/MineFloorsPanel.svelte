@@ -93,7 +93,9 @@
 	}
 </script>
 
-{#if wasmError}
+{#if !wasm}
+	<div class="animate-pulse bg-gray-100 h-20 rounded"></div>
+{:else if wasmError}
 	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load floor data</div>
 {:else}
 <div class="space-y-1">
