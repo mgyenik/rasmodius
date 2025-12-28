@@ -63,6 +63,7 @@ impl CSRandom {
 
     /// Generate a raw integer sample (internal use)
     #[inline]
+    #[allow(clippy::absurd_extreme_comparisons)] // Defensive checks for edge cases
     fn sample_raw(&mut self) -> i32 {
         // Increment indices with wraparound
         self.inext = if self.inext + 1 >= 56 {

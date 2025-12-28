@@ -172,6 +172,7 @@ fn check_cart_has_item(
 }
 
 /// Check mine floor conditions.
+#[allow(clippy::too_many_arguments)]
 fn check_mine_floors(
     seed: i32,
     day: i32,

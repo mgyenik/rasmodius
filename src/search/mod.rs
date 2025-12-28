@@ -41,7 +41,7 @@ pub fn search_range(
     let filter: FilterNode = serde_json::from_str(filter_json)
         .map_err(|e| JsValue::from_str(&format!("Filter parse error: {}", e)))?;
 
-    let game_version = GameVersion::from_str(version);
+    let game_version = GameVersion::parse(version);
 
     let mut matches = 0u32;
 

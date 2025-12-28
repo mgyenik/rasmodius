@@ -130,7 +130,8 @@ pub enum GeodeType {
 }
 
 impl GeodeType {
-    pub fn from_str(s: &str) -> Self {
+    /// Parse a geode type from a string, defaulting to Geode for unknown values.
+    pub fn parse(s: &str) -> Self {
         match s {
             "geode" => Self::Geode,
             "frozen" | "frozen_geode" => Self::FrozenGeode,

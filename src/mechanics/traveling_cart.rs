@@ -240,7 +240,7 @@ fn get_cart_stock_v16(game_id: i32, day: i32) -> Vec<CartItem> {
             continue;
         }
         // Only include objects in range 2-789 (but rng was already called)
-        if id < 2 || id > 789 {
+        if !(2..=789).contains(&id) {
             continue;
         }
 
@@ -376,13 +376,7 @@ fn cart_has_item_1_4_fast(seed: i32, target_item: i32) -> bool {
                 let _ = rng.sample();
 
                 // Check if already seen using linear scan (fast for 10 items)
-                let mut already_seen = false;
-                for i in 0..seen_count {
-                    if seen[i] == item_id {
-                        already_seen = true;
-                        break;
-                    }
-                }
+                let already_seen = seen.iter().take(seen_count).any(|&id| id == item_id);
 
                 if !already_seen {
                     if item_id == target_item {
@@ -438,7 +432,7 @@ fn cart_has_item_v16_fast(game_id: i32, day: i32, target_item: i32) -> bool {
         iteration_index += 1;
 
         // Apply filters (matches game's getRandomItems + category checks)
-        if price == 0 || offlimits || id < 2 || id > 789 {
+        if price == 0 || offlimits || !(2..=789).contains(&id) {
             continue;
         }
         if category >= 0 || category == -999 || type_excluded {
@@ -446,13 +440,10 @@ fn cart_has_item_v16_fast(game_id: i32, day: i32, target_item: i32) -> bool {
         }
 
         // Check for collision with existing top 10 item (same key)
-        let mut collision_idx: Option<usize> = None;
-        for i in 0..top10_count {
-            if top10[i].0 == key {
-                collision_idx = Some(i);
-                break;
-            }
-        }
+        let collision_idx = top10
+            .iter()
+            .take(top10_count)
+            .position(|&(k, _, _)| k == key);
 
         if let Some(idx) = collision_idx {
             // Collision: later item wins (higher index)
@@ -479,13 +470,10 @@ fn cart_has_item_v16_fast(game_id: i32, day: i32, target_item: i32) -> bool {
     }
 
     // Check if target is in top 10
-    for i in 0..top10_count {
-        if top10[i].2 == target_item {
-            return true;
-        }
-    }
-
-    false
+    top10
+        .iter()
+        .take(top10_count)
+        .any(|&(_, _, id)| id == target_item)
 }
 
 /// Find the first cart day (Friday or Sunday) where a target item appears

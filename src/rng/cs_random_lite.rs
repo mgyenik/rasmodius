@@ -4,6 +4,7 @@ use super::{int_overflow, MAX_INT};
 
 /// Precomputed intercepts for CSRandomLite (500 values)
 /// These represent the base value for each consecutive Sample() call when seed=0
+#[allow(clippy::excessive_precision)] // Generated golden test values - precision matters for matching game RNG
 static INTERCEPTS: [f64; 500] = [
     0.7262432699679598, 0.8173253595909687, 0.7680226893946633, 0.5581611914365372,
     0.2060331540210327, 0.5588847946184151, 0.9060270660119257, 0.4421778733107158,
@@ -134,6 +135,7 @@ static INTERCEPTS: [f64; 500] = [
 
 /// Precomputed offsets for CSRandomLite (500 values)
 /// These represent the multiplier for each consecutive Sample() call
+#[allow(clippy::excessive_precision)] // Generated golden test values - precision matters for matching game RNG
 static OFFSETS: [f64; 500] = [
     0.5224253141891330, 0.2934186175900599, 0.6989879904775822, 0.2134429305854453,
     0.4514857397654494, 0.8738978066825762, 0.4480566975884405, 0.5016844028149191,
@@ -277,7 +279,7 @@ impl CSRandomLite {
     /// Create a new CSRandomLite with the given seed
     #[wasm_bindgen(constructor)]
     pub fn new(seed: i32) -> Self {
-        let seed = int_overflow(seed as i64).abs() as u32;
+        let seed = int_overflow(seed as i64).unsigned_abs();
         let seed = if seed > MAX_INT as u32 {
             seed - MAX_INT as u32
         } else {
@@ -321,7 +323,7 @@ impl CSRandomLite {
     /// Reset with a new seed
     #[wasm_bindgen]
     pub fn reseed(&mut self, seed: i32) {
-        let seed = int_overflow(seed as i64).abs() as u32;
+        let seed = int_overflow(seed as i64).unsigned_abs();
         self.seed = if seed > MAX_INT as u32 {
             seed - MAX_INT as u32
         } else {
@@ -342,6 +344,7 @@ impl CSRandomLite {
 
     /// Returns a random integer in [min, max)
     #[wasm_bindgen]
+    #[allow(clippy::absurd_extreme_comparisons)] // Defensive check for edge cases
     pub fn next_range(&mut self, min: i32, max: i32) -> i32 {
         let range = max - min;
         if range > MAX_INT {

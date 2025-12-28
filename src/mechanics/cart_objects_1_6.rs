@@ -5,7 +5,6 @@
 /// Total objects: 807
 /// (id, price, offlimits, category, type_excluded)
 /// type_excluded = type is 'Arch', 'Minerals', or 'Quest'
-
 pub const CART_OBJECTS_1_6: &[(i32, i32, bool, i32, bool)] = &[
     (0, 0, false, -999, false),
     (2, 0, false, -999, false),

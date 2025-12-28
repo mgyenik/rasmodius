@@ -7,7 +7,7 @@
 ///
 /// Each version may have different RNG algorithms, seeding methods,
 /// and game mechanics that affect predictions.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum GameVersion {
     /// Version 1.3 - Uses legacy simple addition seeding
     V1_3,
@@ -16,13 +16,14 @@ pub enum GameVersion {
     /// Version 1.5 - Added Ginger Island, Qi challenges
     V1_5,
     /// Version 1.6 - Major overhaul: green rain, new cart system, etc.
+    #[default]
     V1_6,
 }
 
 impl GameVersion {
     /// Parse a version string like "1.5" or "1.6.4" into a GameVersion.
     /// Defaults to V1_6 for unrecognized versions.
-    pub fn from_str(s: &str) -> Self {
+    pub fn parse(s: &str) -> Self {
         let parts: Vec<u32> = s
             .split('.')
             .filter_map(|p| p.parse().ok())
@@ -109,12 +110,6 @@ impl GameVersion {
     }
 }
 
-impl Default for GameVersion {
-    fn default() -> Self {
-        Self::V1_6
-    }
-}
-
 impl std::fmt::Display for GameVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -132,14 +127,14 @@ mod tests {
 
     #[test]
     fn test_version_parsing() {
-        assert_eq!(GameVersion::from_str("1.3"), GameVersion::V1_3);
-        assert_eq!(GameVersion::from_str("1.4"), GameVersion::V1_4);
-        assert_eq!(GameVersion::from_str("1.5"), GameVersion::V1_5);
-        assert_eq!(GameVersion::from_str("1.5.6"), GameVersion::V1_5);
-        assert_eq!(GameVersion::from_str("1.6"), GameVersion::V1_6);
-        assert_eq!(GameVersion::from_str("1.6.4"), GameVersion::V1_6);
-        assert_eq!(GameVersion::from_str("1.7"), GameVersion::V1_6); // Future versions default to latest
-        assert_eq!(GameVersion::from_str("invalid"), GameVersion::V1_6);
+        assert_eq!(GameVersion::parse("1.3"), GameVersion::V1_3);
+        assert_eq!(GameVersion::parse("1.4"), GameVersion::V1_4);
+        assert_eq!(GameVersion::parse("1.5"), GameVersion::V1_5);
+        assert_eq!(GameVersion::parse("1.5.6"), GameVersion::V1_5);
+        assert_eq!(GameVersion::parse("1.6"), GameVersion::V1_6);
+        assert_eq!(GameVersion::parse("1.6.4"), GameVersion::V1_6);
+        assert_eq!(GameVersion::parse("1.7"), GameVersion::V1_6); // Future versions default to latest
+        assert_eq!(GameVersion::parse("invalid"), GameVersion::V1_6);
     }
 
     #[test]

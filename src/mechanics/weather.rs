@@ -42,6 +42,7 @@ impl Weather {
 /// * `weather_today` - Today's weather code (affects RNG consumption)
 /// * `has_friends` - Whether player has multiplayer friends
 /// * `version` - Game version
+#[allow(clippy::if_same_then_else)] // Intentional: different RNG calls for spring vs fall
 pub fn weather_tomorrow(
     seed: i32,
     days_played: i32,
