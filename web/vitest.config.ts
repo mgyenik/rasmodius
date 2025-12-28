@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import path from 'path';
 
 export default defineConfig({
 	plugins: [svelte({ hot: false })],
@@ -10,7 +11,7 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			$lib: '/home/m/git/rasmodius/web/src/lib',
+			$lib: path.resolve(__dirname, 'src/lib'),
 		},
 	},
 	optimizeDeps: {
