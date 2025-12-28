@@ -87,7 +87,7 @@
 			workerCount = workerPool.getWorkerCount();
 		} catch (e) {
 			console.error('Worker pool failed to initialize:', e);
-			// Don't show error - search just won't work
+			error = 'Search workers failed to initialize. Seed search will not be available.';
 		}
 	});
 
@@ -221,7 +221,15 @@
 			copySuccess = true;
 			setTimeout(() => copySuccess = false, 2000);
 		} catch (e) {
-			console.error('Failed to copy:', e);
+			// Fallback for older browsers
+			const input = document.createElement('input');
+			input.value = url;
+			document.body.appendChild(input);
+			input.select();
+			document.execCommand('copy');
+			document.body.removeChild(input);
+			copySuccess = true;
+			setTimeout(() => copySuccess = false, 2000);
 		}
 	}
 

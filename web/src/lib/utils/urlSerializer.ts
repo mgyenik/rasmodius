@@ -278,25 +278,6 @@ export function getFilterFromURL(): FilterRoot | null {
 }
 
 /**
- * Update the URL with the current filter (without page reload)
- */
-export function updateURLWithFilter(filter: FilterRoot): void {
-  if (typeof window === 'undefined') return;
-
-  const encoded = encodeFilter(filter);
-  const url = new URL(window.location.href);
-
-  if (encoded) {
-    url.searchParams.set('f', encoded);
-  } else {
-    url.searchParams.delete('f');
-  }
-
-  // Update URL without reload
-  window.history.replaceState({}, '', url.toString());
-}
-
-/**
  * Get a shareable URL for the current filter
  */
 export function getShareableURL(filter: FilterRoot): string {
@@ -328,34 +309,6 @@ export function getSeedFromURL(): number | null {
 }
 
 /**
- * Get day from URL
- */
-export function getDayFromURL(): number | null {
-  if (typeof window === 'undefined') return null;
-
-  const params = new URLSearchParams(window.location.search);
-  const dayParam = params.get('day');
-
-  if (!dayParam) return null;
-
-  const day = parseInt(dayParam, 10);
-  return isNaN(day) ? null : day;
-}
-
-/**
- * Update URL with seed and day
- */
-export function updateURLWithSeedAndDay(seed: number, day: number): void {
-  if (typeof window === 'undefined') return;
-
-  const url = new URL(window.location.href);
-  url.searchParams.set('seed', seed.toString());
-  url.searchParams.set('day', day.toString());
-
-  window.history.replaceState({}, '', url.toString());
-}
-
-/**
  * Get version from URL
  */
 export function getVersionFromURL(): '1.3' | '1.4' | '1.5' | '1.6' | null {
@@ -370,18 +323,6 @@ export function getVersionFromURL(): '1.3' | '1.4' | '1.5' | '1.6' | null {
     return versionParam as '1.3' | '1.4' | '1.5' | '1.6';
   }
   return null;
-}
-
-/**
- * Update URL with version
- */
-export function updateURLWithVersion(version: string): void {
-  if (typeof window === 'undefined') return;
-
-  const url = new URL(window.location.href);
-  url.searchParams.set('v', version);
-
-  window.history.replaceState({}, '', url.toString());
 }
 
 // ============================================================================
@@ -570,32 +511,6 @@ export function getExploreFromURL(): ExplorePanel[] | null {
   if (!exploreParam) return null;
 
   return decodeExploreState(exploreParam);
-}
-
-/**
- * Update URL with explore state
- */
-export function updateURLWithExplore(panels: ExplorePanel[], seed?: number): void {
-  if (typeof window === 'undefined') return;
-
-  const url = new URL(window.location.href);
-
-  // Encode panels
-  const state: ExploreState = { seed: seed ?? 1, panels };
-  const encoded = encodeExploreState(state);
-
-  if (encoded) {
-    url.searchParams.set('e', encoded);
-  } else {
-    url.searchParams.delete('e');
-  }
-
-  // Update seed if provided
-  if (seed !== undefined) {
-    url.searchParams.set('seed', seed.toString());
-  }
-
-  window.history.replaceState({}, '', url.toString());
 }
 
 /**
