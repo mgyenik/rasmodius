@@ -2,16 +2,22 @@
 
 /* Stardew Valley themed colors */
 :root {
-	--sdv-brown: #8B4513;
-	--sdv-green: #228B22;
-	--sdv-blue: #4169E1;
-	--sdv-gold: #FFD700;
-	--sdv-cream: #F5F5DC;
+	--sdv-brown: #8b4513;
+	--sdv-green: #228b22;
+	--sdv-blue: #4169e1;
+	--sdv-gold: #ffd700;
+	--sdv-cream: #f5f5dc;
 }
 
 /* Base styles */
 body {
-	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	font-family:
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		Roboto,
+		sans-serif;
 	background-color: var(--sdv-cream);
 	color: #333;
 }

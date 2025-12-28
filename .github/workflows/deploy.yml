@@ -1,8 +1,8 @@
-name: Deploy to GitHub Pages
+name: Deploy
 
 on:
   push:
-    branches: ['main']
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -12,10 +12,31 @@ permissions:
 
 concurrency:
   group: 'pages'
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
+  # Wait for CI workflows to pass
+  wait-for-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Rust CI
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'test'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+
+      - name: Wait for Web CI (e2e)
+        uses: lewagon/wait-on-check-action@v1.3.4
+        with:
+          ref: ${{ github.sha }}
+          check-name: 'e2e'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+
   build:
+    needs: wait-for-ci
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,9 +44,11 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
 
       - name: Install wasm-pack
-        run: cargo install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Build WASM
         run: wasm-pack build --target web --out-dir pkg
@@ -46,6 +69,9 @@ jobs:
         env:
           NODE_ENV: production
         run: npm run build -- --mode production
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

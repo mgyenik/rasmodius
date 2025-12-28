@@ -3,14 +3,19 @@
 
 	type WeatherData = { day: number; weather: string };
 	type WasmModule = {
-		predict_weather_range: (seed: number, start: number, end: number, version: string) => WeatherData[];
+		predict_weather_range: (
+			seed: number,
+			start: number,
+			end: number,
+			version: string
+		) => WeatherData[];
 	};
 
 	let {
 		panel,
 		seed,
 		version,
-		wasm
+		wasm,
 	}: {
 		panel: WeatherPanel;
 		seed: number;
@@ -21,7 +26,12 @@
 	let result = $derived.by(() => {
 		if (!wasm) return { data: [] as WeatherData[], error: null as string | null };
 		try {
-			const data = wasm.predict_weather_range(seed, panel.dayRange.start, panel.dayRange.end, version);
+			const data = wasm.predict_weather_range(
+				seed,
+				panel.dayRange.start,
+				panel.dayRange.end,
+				version
+			);
 			return { data, error: null };
 		} catch (e) {
 			console.error('WASM prediction failed:', e);
@@ -98,17 +108,17 @@
 {:else if wasmError}
 	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load weather data</div>
 {:else}
-<div class="grid grid-cols-7 gap-1 text-xs">
-	{#each weatherData as { day, weather }}
-		{@const highlighted = isHighlighted(weather, day)}
-		<div
-			class="rounded px-1 py-0.5 text-center transition-all {getWeatherClass(weather)}
+	<div class="grid grid-cols-7 gap-1 text-xs">
+		{#each weatherData as { day, weather }}
+			{@const highlighted = isHighlighted(weather, day)}
+			<div
+				class="rounded px-1 py-0.5 text-center transition-all {getWeatherClass(weather)}
 				{highlighted ? 'ring-2 ring-emerald-400 ring-offset-1 shadow-md' : ''}"
-			title="Day {day}: {weather}{highlighted ? ' (matches filter)' : ''}"
-		>
-			<span class="font-medium">{day}</span>
-			<span class="block text-sm">{getWeatherIcon(weather)}</span>
-		</div>
-	{/each}
-</div>
+				title="Day {day}: {weather}{highlighted ? ' (matches filter)' : ''}"
+			>
+				<span class="font-medium">{day}</span>
+				<span class="block text-sm">{getWeatherIcon(weather)}</span>
+			</div>
+		{/each}
+	</div>
 {/if}

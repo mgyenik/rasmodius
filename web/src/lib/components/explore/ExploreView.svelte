@@ -1,6 +1,5 @@
 <script lang="ts">
-	import type { ExplorePanel, ExploreState } from '$lib/types/explorePanels';
-	import { createDefaultExploreState } from '$lib/types/explorePanels';
+	import type { ExplorePanel } from '$lib/types/explorePanels';
 	import PanelContainer from './PanelContainer.svelte';
 	import AddPanelMenu from './AddPanelMenu.svelte';
 	import DailyLuckPanel from './panels/DailyLuckPanel.svelte';
@@ -23,7 +22,7 @@
 		onAddPanel,
 		onRemovePanel,
 		onUpdatePanel,
-		onSeedChange
+		onSeedChange,
 	}: {
 		seed: number;
 		panels: ExplorePanel[];
@@ -87,7 +86,11 @@
 	{#if wasm}
 		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 			{#each panels as panel (panel.id)}
-				<PanelContainer {panel} onRemove={() => handleRemovePanel(panel.id)} onUpdate={handleUpdatePanel}>
+				<PanelContainer
+					{panel}
+					onRemove={() => handleRemovePanel(panel.id)}
+					onUpdate={handleUpdatePanel}
+				>
 					{#if panel.type === 'daily_luck'}
 						<DailyLuckPanel {panel} {seed} {wasm} />
 					{:else if panel.type === 'weather'}

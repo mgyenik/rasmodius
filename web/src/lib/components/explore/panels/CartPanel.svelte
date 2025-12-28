@@ -12,7 +12,7 @@
 		panel,
 		seed,
 		version,
-		wasm
+		wasm,
 	}: {
 		panel: CartPanel;
 		seed: number;
@@ -77,12 +77,16 @@
 						<span
 							class="inline-flex items-center px-1.5 py-0.5 rounded text-xs transition-all
 								{highlighted
-									? 'bg-emerald-100 text-emerald-900 ring-2 ring-emerald-400 ring-offset-1 font-semibold shadow-sm'
-									: 'bg-amber-50 text-amber-800'}"
-							title="{getItemName(item.id)} - {formatPrice(item.price)}{item.quantity > 1 ? ` x${item.quantity}` : ''}{highlighted ? ' (matches filter)' : ''}"
+								? 'bg-emerald-100 text-emerald-900 ring-2 ring-emerald-400 ring-offset-1 font-semibold shadow-sm'
+								: 'bg-amber-50 text-amber-800'}"
+							title="{getItemName(item.id)} - {formatPrice(item.price)}{item.quantity > 1
+								? ` x${item.quantity}`
+								: ''}{highlighted ? ' (matches filter)' : ''}"
 						>
 							<span class="font-medium truncate max-w-[120px]">{getItemName(item.id)}</span>
-							<span class="ml-1 {highlighted ? 'text-emerald-700' : 'text-amber-600'}">{formatPrice(item.price)}</span>
+							<span class="ml-1 {highlighted ? 'text-emerald-700' : 'text-amber-600'}"
+								>{formatPrice(item.price)}</span
+							>
 						</span>
 					{/each}
 				</div>

@@ -7,7 +7,7 @@
 	let {
 		group = $bindable(),
 		isRoot = false,
-		onMeaningfulChange
+		onMeaningfulChange,
 	}: {
 		group: FilterGroup;
 		isRoot?: boolean;
@@ -40,7 +40,9 @@
 
 <div class="space-y-2">
 	{#if group.conditions.length === 0}
-		<p class="text-gray-400 italic text-sm py-2">No filters added yet. Add a filter to get started.</p>
+		<p class="text-gray-400 italic text-sm py-2">
+			No filters added yet. Add a filter to get started.
+		</p>
 	{:else}
 		<!-- Logic Toggle -->
 		<div class="flex items-center gap-2 mb-3">
@@ -72,11 +74,15 @@
 						{#if isGroup(item)}
 							<!-- Nested Group - use array indexing for binding -->
 							<div class="border-l-4 border-gray-300 pl-3">
-								<FilterGroupComponent bind:group={group.conditions[index]} isRoot={false} {onMeaningfulChange} />
+								<FilterGroupComponent
+									bind:group={group.conditions[index] as FilterGroup}
+									isRoot={false}
+									{onMeaningfulChange}
+								/>
 							</div>
 						{:else}
 							<!-- Condition - use array indexing for binding -->
-							<FilterConditionEditor bind:condition={group.conditions[index]} />
+							<FilterConditionEditor bind:condition={group.conditions[index] as FilterCondition} />
 						{/if}
 					</div>
 
@@ -86,7 +92,12 @@
 						title="Remove"
 					>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M6 18L18 6M6 6l12 12"
+							/>
 						</svg>
 					</button>
 				</div>
@@ -95,10 +106,7 @@
 	{/if}
 
 	{#if !isRoot && group.conditions.length > 0}
-		<button
-			onclick={addSubgroup}
-			class="text-xs text-gray-500 hover:text-gray-700 mt-2"
-		>
+		<button onclick={addSubgroup} class="text-xs text-gray-500 hover:text-gray-700 mt-2">
 			+ Add nested group
 		</button>
 	{/if}

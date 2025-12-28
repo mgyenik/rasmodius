@@ -2,12 +2,14 @@
 	import type { DailyLuckPanel, LuckHighlight } from '$lib/types/explorePanels';
 
 	type LuckData = { day: number; luck: number };
-	type WasmModule = { predict_luck_range: (seed: number, start: number, end: number) => LuckData[] };
+	type WasmModule = {
+		predict_luck_range: (seed: number, start: number, end: number) => LuckData[];
+	};
 
 	let {
 		panel,
 		seed,
-		wasm
+		wasm,
 	}: {
 		panel: DailyLuckPanel;
 		seed: number;
@@ -60,17 +62,17 @@
 {:else if wasmError}
 	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load luck data</div>
 {:else}
-<div class="grid grid-cols-7 gap-1 text-xs">
-	{#each luckData as { day, luck }}
-		{@const highlighted = isHighlighted(luck, day)}
-		<div
-			class="rounded px-1 py-0.5 text-center transition-all {getLuckColor(luck)}
+	<div class="grid grid-cols-7 gap-1 text-xs">
+		{#each luckData as { day, luck }}
+			{@const highlighted = isHighlighted(luck, day)}
+			<div
+				class="rounded px-1 py-0.5 text-center transition-all {getLuckColor(luck)}
 				{highlighted ? 'ring-2 ring-emerald-400 ring-offset-1 shadow-md' : ''}"
-			title="Day {day}{highlighted ? ' (matches filter)' : ''}"
-		>
-			<span class="font-medium">{day}</span>
-			<span class="block text-[10px]">{formatLuck(luck)}</span>
-		</div>
-	{/each}
-</div>
+				title="Day {day}{highlighted ? ' (matches filter)' : ''}"
+			>
+				<span class="font-medium">{day}</span>
+				<span class="block text-[10px]">{formatLuck(luck)}</span>
+			</div>
+		{/each}
+	</div>
 {/if}

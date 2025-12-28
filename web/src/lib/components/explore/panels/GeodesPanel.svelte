@@ -17,7 +17,7 @@
 		panel,
 		seed,
 		version,
-		wasm
+		wasm,
 	}: {
 		panel: GeodesPanel;
 		seed: number;
@@ -29,7 +29,13 @@
 		if (!wasm) return { data: [] as GeodeResult[], error: null as string | null };
 		try {
 			const count = panel.geodeRange.end - panel.geodeRange.start + 1;
-			const data = wasm.predict_geodes(seed, panel.geodeRange.start, count, panel.geodeType, version);
+			const data = wasm.predict_geodes(
+				seed,
+				panel.geodeRange.start,
+				count,
+				panel.geodeType,
+				version
+			);
 			return { data, error: null };
 		} catch (e) {
 			console.error('WASM prediction failed:', e);
@@ -57,7 +63,7 @@
 		});
 	}
 
-	function getGeodeTypeLabel(): string {
+	function _getGeodeTypeLabel(): string {
 		switch (panel.geodeType) {
 			case 'geode':
 				return 'Regular';
@@ -82,27 +88,35 @@
 {:else if wasmError}
 	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load geode data</div>
 {:else}
-<div class="space-y-1">
-	{#each geodeData as result, i}
-		{@const geodeNum = panel.geodeRange.start + i}
-		{@const highlighted = isHighlighted(geodeNum, result.item_id)}
-		{@const valuable = isValuable(result.item_id)}
-		<div
-			class="flex items-center gap-2 text-sm rounded px-1 py-0.5 transition-all
+	<div class="space-y-1">
+		{#each geodeData as result, i}
+			{@const geodeNum = panel.geodeRange.start + i}
+			{@const highlighted = isHighlighted(geodeNum, result.item_id)}
+			{@const valuable = isValuable(result.item_id)}
+			<div
+				class="flex items-center gap-2 text-sm rounded px-1 py-0.5 transition-all
 				{highlighted
 					? 'bg-emerald-100 ring-2 ring-emerald-400 ring-offset-1 shadow-sm'
 					: valuable
 						? 'bg-purple-50'
 						: 'bg-gray-50'}"
-		>
-			<span class="font-mono text-gray-500 w-6 text-right">#{geodeNum}</span>
-			<span class="{highlighted ? 'text-emerald-800 font-semibold' : valuable ? 'text-purple-700 font-medium' : 'text-gray-700'}">
-				{getItemName(result.item_id)}
-			</span>
-			{#if result.quantity > 1}
-				<span class="{highlighted ? 'text-emerald-600' : 'text-gray-500'} text-xs">x{result.quantity}</span>
-			{/if}
-		</div>
-	{/each}
-</div>
+			>
+				<span class="font-mono text-gray-500 w-6 text-right">#{geodeNum}</span>
+				<span
+					class={highlighted
+						? 'text-emerald-800 font-semibold'
+						: valuable
+							? 'text-purple-700 font-medium'
+							: 'text-gray-700'}
+				>
+					{getItemName(result.item_id)}
+				</span>
+				{#if result.quantity > 1}
+					<span class="{highlighted ? 'text-emerald-600' : 'text-gray-500'} text-xs"
+						>x{result.quantity}</span
+					>
+				{/if}
+			</div>
+		{/each}
+	</div>
 {/if}

@@ -13,11 +13,11 @@ import type { ExplorePanel, ExploreState } from '$lib/types/explorePanels';
 import { encodeFilter, encodeExploreState } from './urlSerializer';
 
 export interface URLStateParams {
-  filter?: FilterRoot;
-  panels?: ExplorePanel[];
-  seed?: number;
-  version?: string;
-  activeTab?: 'search' | 'explore';
+	filter?: FilterRoot;
+	panels?: ExplorePanel[];
+	seed?: number;
+	version?: string;
+	activeTab?: 'search' | 'explore';
 }
 
 /**
@@ -25,48 +25,48 @@ export interface URLStateParams {
  * Exported for testing purposes
  */
 export function buildSearchParams(
-  params: URLStateParams,
-  currentSearchParams: URLSearchParams = new URLSearchParams()
+	params: URLStateParams,
+	currentSearchParams: URLSearchParams = new URLSearchParams()
 ): URLSearchParams {
-  const searchParams = new URLSearchParams(currentSearchParams);
+	const searchParams = new URLSearchParams(currentSearchParams);
 
-  // Filter
-  if (params.filter !== undefined) {
-    const encoded = encodeFilter(params.filter);
-    if (encoded) {
-      searchParams.set('f', encoded);
-    } else {
-      searchParams.delete('f');
-    }
-  }
+	// Filter
+	if (params.filter !== undefined) {
+		const encoded = encodeFilter(params.filter);
+		if (encoded) {
+			searchParams.set('f', encoded);
+		} else {
+			searchParams.delete('f');
+		}
+	}
 
-  // Explore panels
-  if (params.panels !== undefined) {
-    const state: ExploreState = { seed: params.seed ?? 1, panels: params.panels };
-    const encoded = encodeExploreState(state);
-    if (encoded) {
-      searchParams.set('e', encoded);
-    } else {
-      searchParams.delete('e');
-    }
-  }
+	// Explore panels
+	if (params.panels !== undefined) {
+		const state: ExploreState = { seed: params.seed ?? 1, panels: params.panels };
+		const encoded = encodeExploreState(state);
+		if (encoded) {
+			searchParams.set('e', encoded);
+		} else {
+			searchParams.delete('e');
+		}
+	}
 
-  // Seed
-  if (params.seed !== undefined) {
-    searchParams.set('seed', params.seed.toString());
-  }
+	// Seed
+	if (params.seed !== undefined) {
+		searchParams.set('seed', params.seed.toString());
+	}
 
-  // Version
-  if (params.version !== undefined) {
-    searchParams.set('v', params.version);
-  }
+	// Version
+	if (params.version !== undefined) {
+		searchParams.set('v', params.version);
+	}
 
-  // Active tab
-  if (params.activeTab !== undefined) {
-    searchParams.set('tab', params.activeTab);
-  }
+	// Active tab
+	if (params.activeTab !== undefined) {
+		searchParams.set('tab', params.activeTab);
+	}
 
-  return searchParams;
+	return searchParams;
 }
 
 /**
@@ -80,22 +80,22 @@ export function buildSearchParams(
  * - Change seed (debounced)
  */
 export function pushURLState(params: URLStateParams): void {
-  const currentPage = get(page);
-  const searchParams = buildSearchParams(params, currentPage.url.searchParams);
-  const url = new URL(currentPage.url);
-  url.search = searchParams.toString();
+	const currentPage = get(page);
+	const searchParams = buildSearchParams(params, currentPage.url.searchParams);
+	const url = new URL(currentPage.url);
+	url.search = searchParams.toString();
 
-  // SvelteKit's pushState - creates history entry with state
-  // The state object is restored on back/forward via page.state
-  // Note: We must clone the objects because Svelte 5's $state creates proxies
-  // which can't be cloned by the History API's structured clone algorithm
-  pushState(url.toString(), {
-    filter: params.filter ? JSON.parse(JSON.stringify(params.filter)) : undefined,
-    panels: params.panels ? JSON.parse(JSON.stringify(params.panels)) : undefined,
-    seed: params.seed,
-    version: params.version,
-    activeTab: params.activeTab,
-  });
+	// SvelteKit's pushState - creates history entry with state
+	// The state object is restored on back/forward via page.state
+	// Note: We must clone the objects because Svelte 5's $state creates proxies
+	// which can't be cloned by the History API's structured clone algorithm
+	pushState(url.toString(), {
+		filter: params.filter ? JSON.parse(JSON.stringify(params.filter)) : undefined,
+		panels: params.panels ? JSON.parse(JSON.stringify(params.panels)) : undefined,
+		seed: params.seed,
+		version: params.version,
+		activeTab: params.activeTab,
+	});
 }
 
 /**
@@ -107,18 +107,18 @@ export function pushURLState(params: URLStateParams): void {
  * - Version changes
  */
 export function replaceURLState(params: URLStateParams): void {
-  const currentPage = get(page);
-  const searchParams = buildSearchParams(params, currentPage.url.searchParams);
-  const url = new URL(currentPage.url);
-  url.search = searchParams.toString();
+	const currentPage = get(page);
+	const searchParams = buildSearchParams(params, currentPage.url.searchParams);
+	const url = new URL(currentPage.url);
+	url.search = searchParams.toString();
 
-  // SvelteKit's replaceState - overwrites current entry
-  // Note: We must clone the objects because Svelte 5's $state creates proxies
-  replaceState(url.toString(), {
-    filter: params.filter ? JSON.parse(JSON.stringify(params.filter)) : undefined,
-    panels: params.panels ? JSON.parse(JSON.stringify(params.panels)) : undefined,
-    seed: params.seed,
-    version: params.version,
-    activeTab: params.activeTab,
-  });
+	// SvelteKit's replaceState - overwrites current entry
+	// Note: We must clone the objects because Svelte 5's $state creates proxies
+	replaceState(url.toString(), {
+		filter: params.filter ? JSON.parse(JSON.stringify(params.filter)) : undefined,
+		panels: params.panels ? JSON.parse(JSON.stringify(params.panels)) : undefined,
+		seed: params.seed,
+		version: params.version,
+		activeTab: params.activeTab,
+	});
 }

@@ -15,7 +15,7 @@
 		getVersionFromURL,
 		getShareableURL,
 		getExploreFromURL,
-		getShareableExploreURL
+		getShareableExploreURL,
 	} from '$lib/utils/urlSerializer';
 	import { pushURLState, replaceURLState } from '$lib/utils/urlNavigation';
 
@@ -44,13 +44,12 @@
 	let workerPool: WorkerPool | null = null;
 	let workerCount = $state(0);
 
-
 	let wasm: typeof import('rasmodius') | null = $state(null);
 
 	const SEARCH_RANGES: Record<string, { start: number; end: number; label: string }> = {
 		'10m': { start: 0, end: 9999999, label: '10M seeds' },
 		'100m': { start: 0, end: 99999999, label: '100M seeds' },
-		'full': { start: 0, end: 2147483647, label: 'Full range (2.1B)' },
+		full: { start: 0, end: 2147483647, label: 'Full range (2.1B)' },
 	};
 
 	onMount(async () => {
@@ -139,7 +138,7 @@
 					onError: (msg) => {
 						error = msg;
 						isSearching = false;
-					}
+					},
 				},
 				gameVersion
 			);
@@ -201,8 +200,8 @@
 		try {
 			await navigator.clipboard.writeText(url);
 			copySuccess = true;
-			setTimeout(() => copySuccess = false, 2000);
-		} catch (e) {
+			setTimeout(() => (copySuccess = false), 2000);
+		} catch {
 			// Fallback for older browsers
 			const input = document.createElement('input');
 			input.value = url;
@@ -211,7 +210,7 @@
 			document.execCommand('copy');
 			document.body.removeChild(input);
 			copySuccess = true;
-			setTimeout(() => copySuccess = false, 2000);
+			setTimeout(() => (copySuccess = false), 2000);
 		}
 	}
 
@@ -220,8 +219,8 @@
 		try {
 			await navigator.clipboard.writeText(url);
 			copySuccess = true;
-			setTimeout(() => copySuccess = false, 2000);
-		} catch (e) {
+			setTimeout(() => (copySuccess = false), 2000);
+		} catch {
 			// Fallback for older browsers
 			const input = document.createElement('input');
 			input.value = url;
@@ -230,7 +229,7 @@
 			document.execCommand('copy');
 			document.body.removeChild(input);
 			copySuccess = true;
-			setTimeout(() => copySuccess = false, 2000);
+			setTimeout(() => (copySuccess = false), 2000);
 		}
 	}
 
@@ -271,13 +270,15 @@
 	let hasNavigated = $state(false);
 
 	// Derive page state reactively
-	const pageState = $derived(page.state as {
-		filter?: FilterRoot;
-		panels?: ExplorePanel[];
-		seed?: number;
-		version?: '1.3' | '1.4' | '1.5' | '1.6';
-		activeTab?: 'search' | 'explore';
-	});
+	const pageState = $derived(
+		page.state as {
+			filter?: FilterRoot;
+			panels?: ExplorePanel[];
+			seed?: number;
+			version?: '1.3' | '1.4' | '1.5' | '1.6';
+			activeTab?: 'search' | 'explore';
+		}
+	);
 
 	// Watch for page.state changes (back/forward navigation)
 	// SvelteKit restores page.state automatically on history navigation
@@ -326,18 +327,28 @@
 			<div class="flex items-center justify-between mb-2">
 				<h1 class="text-4xl font-bold text-amber-900">Rasmodius</h1>
 				<button
-					onclick={() => infoCollapsed = !infoCollapsed}
+					onclick={() => (infoCollapsed = !infoCollapsed)}
 					class="text-amber-600 hover:text-amber-800 text-sm flex items-center gap-1"
 				>
 					{#if infoCollapsed}
 						<span>Show info</span>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M19 9l-7 7-7-7"
+							/>
 						</svg>
 					{:else}
 						<span>Hide info</span>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M5 15l7-7 7 7"
+							/>
 						</svg>
 					{/if}
 				</button>
@@ -347,29 +358,65 @@
 			{#if !infoCollapsed}
 				<div class="mt-4 bg-white/50 rounded-lg p-4 text-sm text-amber-800 space-y-3">
 					<p>
-						A high-performance seed finder for <strong>speedrunners</strong> and <strong>challenge players</strong>.
-						Search millions of seeds to find ones with specific characteristics (cart items, lucky days, night events, weather, geodes, mine conditions),
-						then explore them with dynamic prediction panels.
+						A high-performance seed finder for <strong>speedrunners</strong> and
+						<strong>challenge players</strong>. Search millions of seeds to find ones with specific
+						characteristics (cart items, lucky days, night events, weather, geodes, mine
+						conditions), then explore them with dynamic prediction panels.
 					</p>
 
 					<div class="flex flex-wrap gap-x-6 gap-y-1 text-amber-700">
 						<span class="flex items-center gap-1">
-							<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+							<svg
+								class="w-4 h-4 text-green-600"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M5 13l4 4L19 7"
+								/>
 							</svg>
 							100% client-side — nothing sent to servers
 						</span>
 						<span class="flex items-center gap-1">
-							<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+							<svg
+								class="w-4 h-4 text-green-600"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M5 13l4 4L19 7"
+								/>
 							</svg>
 							No tracking or analytics
 						</span>
 						<span class="flex items-center gap-1">
-							<svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+							<svg
+								class="w-4 h-4 text-green-600"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M5 13l4 4L19 7"
+								/>
 							</svg>
-							<a href="https://github.com/mgyenik/rasmodius" target="_blank" rel="noopener" class="underline hover:text-amber-900">Open source (MIT)</a>
+							<a
+								href="https://github.com/mgyenik/rasmodius"
+								target="_blank"
+								rel="noopener"
+								class="underline hover:text-amber-900">Open source (MIT)</a
+							>
 						</span>
 					</div>
 
@@ -384,9 +431,19 @@
 
 					<p class="text-xs text-amber-600 border-t border-amber-200 pt-3">
 						Built on the incredible RNG research from
-						<a href="https://github.com/MouseyPounds/stardew-predictor" target="_blank" rel="noopener" class="underline hover:text-amber-800">stardew-predictor</a>
+						<a
+							href="https://github.com/MouseyPounds/stardew-predictor"
+							target="_blank"
+							rel="noopener"
+							class="underline hover:text-amber-800">stardew-predictor</a
+						>
 						and
-						<a href="https://github.com/Bla-De/StardewSeedScripts" target="_blank" rel="noopener" class="underline hover:text-amber-800">StardewSeedScripts</a>.
+						<a
+							href="https://github.com/Bla-De/StardewSeedScripts"
+							target="_blank"
+							rel="noopener"
+							class="underline hover:text-amber-800">StardewSeedScripts</a
+						>.
 					</p>
 				</div>
 			{/if}
@@ -395,7 +452,7 @@
 		{#if error}
 			<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
 				{error}
-				<button onclick={() => error = null} class="ml-2 font-bold">×</button>
+				<button onclick={() => (error = null)} class="ml-2 font-bold">×</button>
 			</div>
 		{/if}
 
@@ -440,7 +497,7 @@
 						onAddPanel={handlePanelAdd}
 						onRemovePanel={handlePanelRemove}
 						onUpdatePanel={handlePanelUpdate}
-						onSeedChange={onSeedChange}
+						{onSeedChange}
 					/>
 				</div>
 			{:else}
@@ -457,7 +514,11 @@
 							</button>
 						{/if}
 					</div>
-					<FilterBuilder bind:filter onSearch={handleSearch} onMeaningfulChange={onFilterMeaningfulChange} />
+					<FilterBuilder
+						bind:filter
+						onSearch={handleSearch}
+						onMeaningfulChange={onFilterMeaningfulChange}
+					/>
 
 					<!-- Search Options -->
 					<div class="mt-6 pt-4 border-t border-gray-200">
@@ -522,7 +583,8 @@
 									<div class="h-3 bg-gray-200 rounded-full overflow-hidden">
 										<div
 											class="h-full bg-amber-500 transition-all duration-200"
-											style="width: {(searchProgress.totalChecked / searchProgress.totalSeeds) * 100}%"
+											style="width: {(searchProgress.totalChecked / searchProgress.totalSeeds) *
+												100}%"
 										></div>
 									</div>
 								</div>
@@ -544,7 +606,9 @@
 								</div>
 								<div>
 									<span class="text-gray-500">Speed:</span>
-									<span class="font-mono ml-1">{formatNumber(Math.round(searchProgress.seedsPerSecond))}/s</span>
+									<span class="font-mono ml-1"
+										>{formatNumber(Math.round(searchProgress.seedsPerSecond))}/s</span
+									>
 								</div>
 								<div>
 									<span class="text-gray-500">ETA:</span>
@@ -578,7 +642,9 @@
 							{/each}
 						</div>
 						{#if searchResults.length > 50}
-							<p class="text-sm text-gray-500 mt-4">Showing first 50 of {searchResults.length} results</p>
+							<p class="text-sm text-gray-500 mt-4">
+								Showing first 50 of {searchResults.length} results
+							</p>
 						{/if}
 					</div>
 				{:else if !isSearching && filter.conditions.length > 0}

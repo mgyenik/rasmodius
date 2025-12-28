@@ -21,7 +21,7 @@
 		panel,
 		seed,
 		version,
-		wasm
+		wasm,
 	}: {
 		panel: MineFloorsPanel;
 		seed: number;
@@ -89,7 +89,9 @@
 		if (floor.is_mushroom_floor) traits.push('Mushroom');
 		if (floor.is_monster_floor) traits.push('Monster');
 		if (floor.is_dark_floor) traits.push('Dark');
-		return traits.length > 0 ? `Floor ${floor.floor}: ${traits.join(', ')}` : `Floor ${floor.floor}`;
+		return traits.length > 0
+			? `Floor ${floor.floor}: ${traits.join(', ')}`
+			: `Floor ${floor.floor}`;
 	}
 </script>
 
@@ -98,26 +100,28 @@
 {:else if wasmError}
 	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load floor data</div>
 {:else}
-<div class="space-y-1">
-	{#each floorGroups as group}
-		<div class="flex gap-0.5">
-			{#each group as floor}
-				{@const highlighted = isHighlighted(floor)}
-				<div
-					class="w-7 h-7 flex items-center justify-center rounded text-xs font-medium transition-all {getFloorClass(floor)}
+	<div class="space-y-1">
+		{#each floorGroups as group}
+			<div class="flex gap-0.5">
+				{#each group as floor}
+					{@const highlighted = isHighlighted(floor)}
+					<div
+						class="w-7 h-7 flex items-center justify-center rounded text-xs font-medium transition-all {getFloorClass(
+							floor
+						)}
 						{highlighted ? 'ring-2 ring-emerald-400 ring-offset-1 shadow-md' : ''}"
-					title="{getFloorTitle(floor)}{highlighted ? ' (matches filter)' : ''}"
-				>
-					{#if getFloorIcon(floor)}
-						<span class="text-sm">{getFloorIcon(floor)}</span>
-					{:else}
-						{floor.floor}
-					{/if}
-				</div>
-			{/each}
-		</div>
-	{/each}
-</div>
+						title="{getFloorTitle(floor)}{highlighted ? ' (matches filter)' : ''}"
+					>
+						{#if getFloorIcon(floor)}
+							<span class="text-sm">{getFloorIcon(floor)}</span>
+						{:else}
+							{floor.floor}
+						{/if}
+					</div>
+				{/each}
+			</div>
+		{/each}
+	</div>
 
 	<div class="flex gap-3 mt-2 text-xs text-gray-500">
 		<span><span class="inline-block w-3 h-3 bg-red-100 rounded mr-1"></span>Monster</span>

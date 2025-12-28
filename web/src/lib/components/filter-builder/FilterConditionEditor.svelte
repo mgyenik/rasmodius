@@ -3,7 +3,9 @@
 	import { getItemName, ITEMS } from '$lib/data/items';
 	import DaySpecEditor from './DaySpecEditor.svelte';
 
-	let { condition = $bindable() }: {
+	let {
+		condition = $bindable(),
+	}: {
 		condition: FilterCondition;
 	} = $props();
 
@@ -21,9 +23,9 @@
 	const filteredItems = $derived(
 		itemSearchQuery.trim() === ''
 			? ALL_ITEMS.slice(0, 50)
-			: ALL_ITEMS.filter(item =>
-				item.name.toLowerCase().includes(itemSearchQuery.toLowerCase())
-			).slice(0, 50)
+			: ALL_ITEMS.filter((item) =>
+					item.name.toLowerCase().includes(itemSearchQuery.toLowerCase())
+				).slice(0, 50)
 	);
 
 	// Popular geode targets
@@ -68,7 +70,6 @@
 			step="0.01"
 		/>
 	</div>
-
 {:else if condition.type === 'night_event'}
 	<!-- Night Event: [Event v] [When v] [params] -->
 	<div class="flex flex-wrap items-center gap-2 text-sm">
@@ -86,7 +87,6 @@
 		</select>
 		<DaySpecEditor bind:daySpec={condition.daySpec} />
 	</div>
-
 {:else if condition.type === 'cart_item'}
 	<!-- Cart Item: [Item Button/Search] in [When v] [params] max [price] -->
 	<div class="flex flex-wrap items-center gap-2 text-sm">
@@ -102,11 +102,16 @@
 					bind:value={itemSearchQuery}
 					autofocus
 				/>
-				<div class="absolute z-10 w-64 mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto">
+				<div
+					class="absolute z-10 w-64 mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-48 overflow-y-auto"
+				>
 					{#each filteredItems as item}
 						<button
 							type="button"
-							class="w-full px-2 py-1 text-left text-sm hover:bg-amber-50 {condition.itemId === item.id ? 'bg-amber-100' : ''}"
+							class="w-full px-2 py-1 text-left text-sm hover:bg-amber-50 {condition.itemId ===
+							item.id
+								? 'bg-amber-100'
+								: ''}"
 							onclick={() => selectItem(item.id)}
 						>
 							{item.name}
@@ -120,13 +125,13 @@
 				<button
 					type="button"
 					class="fixed inset-0 z-0"
-					onclick={() => showItemDropdown = false}
+					onclick={() => (showItemDropdown = false)}
 					aria-label="Close dropdown"
 				></button>
 			{:else}
 				<button
 					type="button"
-					onclick={() => showItemDropdown = true}
+					onclick={() => (showItemDropdown = true)}
 					class="px-3 py-1 bg-amber-100 text-amber-800 rounded hover:bg-amber-200 transition-colors font-medium"
 				>
 					{getItemName(condition.itemId)}
@@ -145,7 +150,6 @@
 		/>
 		<span class="text-gray-500">g</span>
 	</div>
-
 {:else if condition.type === 'geode'}
 	<!-- Geode: [Type v] #[num] contains [item v] -->
 	<div class="flex flex-wrap items-center gap-2 text-sm">
@@ -172,14 +176,13 @@
 		<select
 			class="px-2 py-1 border border-gray-300 rounded text-sm"
 			value={condition.targetItems[0]}
-			onchange={(e) => condition.targetItems = [parseInt(e.currentTarget.value)]}
+			onchange={(e) => (condition.targetItems = [parseInt(e.currentTarget.value)])}
 		>
 			{#each POPULAR_GEODE_ITEMS as item}
 				<option value={item.id}>{item.name}</option>
 			{/each}
 		</select>
 	</div>
-
 {:else if condition.type === 'weather'}
 	<!-- Weather: [Type v] [When v] [params] -->
 	<div class="flex flex-wrap items-center gap-2 text-sm">
@@ -197,7 +200,6 @@
 		</select>
 		<DaySpecEditor bind:daySpec={condition.daySpec} />
 	</div>
-
 {:else if condition.type === 'mine_floor'}
 	<!-- Mine Floor: floors [start] to [end] [when v] [params] | checkboxes -->
 	<div class="space-y-2">
@@ -231,11 +233,7 @@
 				<span class="text-gray-700">No monsters</span>
 			</label>
 			<label class="flex items-center gap-1.5">
-				<input
-					type="checkbox"
-					bind:checked={condition.noDark}
-					class="rounded border-gray-300"
-				/>
+				<input type="checkbox" bind:checked={condition.noDark} class="rounded border-gray-300" />
 				<span class="text-gray-700">No dark</span>
 			</label>
 			<label class="flex items-center gap-1.5">

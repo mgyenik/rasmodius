@@ -3,7 +3,7 @@
 
 	let {
 		daySpec = $bindable(),
-		allowedTypes = ['exact', 'range', 'season'] as const
+		allowedTypes = ['exact', 'range', 'season'] as const,
 	}: {
 		daySpec: DaySpec;
 		allowedTypes?: readonly DaySpec['type'][];
@@ -27,21 +27,19 @@
 	const TYPE_LABELS: Record<DaySpec['type'], string> = {
 		exact: 'on day',
 		range: 'in range',
-		season: 'in season'
+		season: 'in season',
 	};
 
 	// Alternative labels for cart_item style
 	const ALT_TYPE_LABELS: Record<DaySpec['type'], string> = {
 		exact: 'on day',
 		range: 'day range',
-		season: 'season'
+		season: 'season',
 	};
 
 	// Use alternative labels when only season/range are allowed (cart_item style)
 	const useAltLabels = $derived(
-		allowedTypes.length === 2 &&
-		allowedTypes.includes('season') &&
-		allowedTypes.includes('range')
+		allowedTypes.length === 2 && allowedTypes.includes('season') && allowedTypes.includes('range')
 	);
 
 	const labels = $derived(useAltLabels ? ALT_TYPE_LABELS : TYPE_LABELS);
@@ -79,10 +77,7 @@
 		min="1"
 	/>
 {:else if daySpec.type === 'season'}
-	<select
-		class="px-2 py-1 border border-gray-300 rounded text-sm"
-		bind:value={daySpec.season}
-	>
+	<select class="px-2 py-1 border border-gray-300 rounded text-sm" bind:value={daySpec.season}>
 		<option value={0}>Spring</option>
 		<option value={1}>Summer</option>
 		<option value={2}>Fall</option>

@@ -7,27 +7,23 @@ import path from 'path';
 export default defineConfig({
 	resolve: {
 		alias: {
-			'rasmodius': path.resolve(__dirname, '../pkg/rasmodius.js')
-		}
+			rasmodius: path.resolve(__dirname, '../pkg/rasmodius.js'),
+		},
 	},
-	plugins: [
-		wasm(),
-		tailwindcss(),
-		sveltekit()
-	],
+	plugins: [wasm(), tailwindcss(), sveltekit()],
 	optimizeDeps: {
-		exclude: ['rasmodius']
+		exclude: ['rasmodius'],
 	},
 	build: {
-		target: 'esnext'
+		target: 'esnext',
 	},
 	worker: {
 		format: 'es',
-		plugins: () => [wasm()]
+		plugins: () => [wasm()],
 	},
 	server: {
 		fs: {
-			allow: ['..']
-		}
-	}
+			allow: ['..'],
+		},
+	},
 });

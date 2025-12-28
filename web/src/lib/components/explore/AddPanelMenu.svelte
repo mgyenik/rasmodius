@@ -7,7 +7,7 @@
 		createWeatherPanel,
 		createGeodesPanel,
 		createMineFloorsPanel,
-		createDishPanel
+		createDishPanel,
 	} from '$lib/types/explorePanels';
 
 	let { onAdd }: { onAdd: (panel: ExplorePanel) => void } = $props();
@@ -26,7 +26,7 @@
 		{ label: 'Magma Geodes', icon: '🔥', create: () => createGeodesPanel('magma') },
 		{ label: 'Artifact Troves', icon: '📜', create: () => createGeodesPanel('trove') },
 		{ label: 'Golden Coconuts', icon: '🥥', create: () => createGeodesPanel('coconut') },
-		{ label: 'Mine Floors', icon: '⛏️', create: () => createMineFloorsPanel() }
+		{ label: 'Mine Floors', icon: '⛏️', create: () => createMineFloorsPanel() },
 	];
 
 	function handleAdd(create: () => ExplorePanel) {

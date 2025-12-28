@@ -11,12 +11,12 @@ const config = {
 			assets: 'build',
 			fallback: undefined,
 			precompress: false,
-			strict: true
+			strict: true,
 		}),
 		paths: {
-			base: process.env.NODE_ENV === 'production' ? '/rasmodius' : ''
-		}
-	}
+			base: process.env.NODE_ENV === 'production' ? '/rasmodius' : '',
+		},
+	},
 };
 
 export default config;

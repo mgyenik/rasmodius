@@ -10,7 +10,7 @@
 	let {
 		panel,
 		seed,
-		wasm
+		wasm,
 	}: {
 		panel: DishPanel;
 		seed: number;
@@ -49,21 +49,25 @@
 {:else if wasmError}
 	<div class="text-red-600 text-sm p-2 bg-red-50 rounded">Failed to load dish data</div>
 {:else}
-<div class="grid grid-cols-7 gap-1 text-xs">
-	{#each dishData as { day, dish }}
-		{@const highlighted = isHighlighted(dish.id, day)}
-		<div
-			class="rounded px-1 py-0.5 text-center transition-all
-				{highlighted
-					? 'bg-emerald-100 ring-2 ring-emerald-400 ring-offset-1 shadow-sm'
-					: 'bg-orange-50'}"
-			title="{getItemName(dish.id)}{dish.quantity > 1 ? ` x${dish.quantity}` : ''}{highlighted ? ' (matches filter)' : ''}"
-		>
-			<span class="font-medium {highlighted ? 'text-emerald-800' : 'text-orange-700'}">{day}</span>
-			<span class="block text-[10px] {highlighted ? 'text-emerald-700' : 'text-orange-600'} truncate" title={getItemName(dish.id)}>
-				{getItemName(dish.id).split(' ')[0]}
-			</span>
-		</div>
-	{/each}
-</div>
+	<div class="grid grid-cols-7 gap-1 text-xs">
+		{#each dishData as { day, dish }}
+			{@const highlighted = isHighlighted(dish.id, day)}
+			<div
+				class="rounded px-1 py-0.5 text-center transition-all
+				{highlighted ? 'bg-emerald-100 ring-2 ring-emerald-400 ring-offset-1 shadow-sm' : 'bg-orange-50'}"
+				title="{getItemName(dish.id)}{dish.quantity > 1 ? ` x${dish.quantity}` : ''}{highlighted
+					? ' (matches filter)'
+					: ''}"
+			>
+				<span class="font-medium {highlighted ? 'text-emerald-800' : 'text-orange-700'}">{day}</span
+				>
+				<span
+					class="block text-[10px] {highlighted ? 'text-emerald-700' : 'text-orange-600'} truncate"
+					title={getItemName(dish.id)}
+				>
+					{getItemName(dish.id).split(' ')[0]}
+				</span>
+			</div>
+		{/each}
+	</div>
 {/if}

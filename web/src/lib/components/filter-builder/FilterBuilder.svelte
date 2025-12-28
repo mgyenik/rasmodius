@@ -6,7 +6,7 @@
 	let {
 		filter = $bindable(createEmptyFilter()),
 		onSearch,
-		onMeaningfulChange
+		onMeaningfulChange,
 	}: {
 		filter?: FilterRoot;
 		onSearch?: (filter: FilterRoot) => void;

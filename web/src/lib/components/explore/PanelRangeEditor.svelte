@@ -4,7 +4,7 @@
 	let {
 		panel,
 		onSave,
-		onCancel
+		onCancel,
 	}: {
 		panel: ExplorePanel;
 		onSave: (updated: ExplorePanel) => void;
@@ -72,14 +72,14 @@
 				updated = {
 					...panel,
 					geodeType,
-					geodeRange: { start: startValue, end: endValue }
+					geodeRange: { start: startValue, end: endValue },
 				};
 				break;
 			case 'mine_floors':
 				updated = {
 					...panel,
 					day: dayValue,
-					floorRange: { start: startValue, end: endValue }
+					floorRange: { start: startValue, end: endValue },
 				};
 				break;
 		}
@@ -101,7 +101,7 @@
 		{ value: 'magma', label: 'Magma' },
 		{ value: 'omni', label: 'Omni' },
 		{ value: 'trove', label: 'Artifact Trove' },
-		{ value: 'coconut', label: 'Golden Coconut' }
+		{ value: 'coconut', label: 'Golden Coconut' },
 	];
 </script>
 

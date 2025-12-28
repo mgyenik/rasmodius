@@ -1,5 +1,9 @@
 # Rasmodius
 
+[![Rust CI](https://github.com/mgyenik/rasmodius/actions/workflows/rust.yml/badge.svg)](https://github.com/mgyenik/rasmodius/actions/workflows/rust.yml)
+[![Web CI](https://github.com/mgyenik/rasmodius/actions/workflows/web.yml/badge.svg)](https://github.com/mgyenik/rasmodius/actions/workflows/web.yml)
+[![Deploy](https://github.com/mgyenik/rasmodius/actions/workflows/deploy.yml/badge.svg)](https://github.com/mgyenik/rasmodius/actions/workflows/deploy.yml)
+
 A high-performance Stardew Valley seed finder for speedrunners and challenge players. Search millions of seeds to find ones with specific characteristics, then explore them with dynamic data panels.
 
 **[Try it live](https://mgyenik.github.io/rasmodius/)**

@@ -8,7 +8,7 @@
 		panel,
 		onRemove,
 		onUpdate,
-		children
+		children,
 	}: {
 		panel: ExplorePanel;
 		onRemove: () => void;

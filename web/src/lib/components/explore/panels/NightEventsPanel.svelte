@@ -15,7 +15,7 @@
 		panel,
 		seed,
 		version,
-		wasm
+		wasm,
 	}: {
 		panel: NightEventsPanel;
 		seed: number;
@@ -26,7 +26,12 @@
 	let result = $derived.by(() => {
 		if (!wasm) return { data: [] as EventData[], error: null as string | null };
 		try {
-			const data = wasm.predict_night_events_range(seed, panel.dayRange.start, panel.dayRange.end, version);
+			const data = wasm.predict_night_events_range(
+				seed,
+				panel.dayRange.start,
+				panel.dayRange.end,
+				version
+			);
 			return { data, error: null };
 		} catch (e) {
 			console.error('WASM prediction failed:', e);
